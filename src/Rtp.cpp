@@ -1,5 +1,9 @@
 #include "RTP.h"
 #include <stdlib.h>
+//#define STRICT
+
+
+
 
 using namespace rtp;
 
@@ -23,12 +27,6 @@ Rtp::Rtp(rtpIO input)
 {
 	setRtpPacket(input);
 }
-
-
-
-
-
-
 
 
 //----------------SETTERS + GETTERS----------------
@@ -107,7 +105,7 @@ void Rtp::setPayloadType(Rtp::rtpPayloadTypes pt)
 
 Rtp::rtpPayloadTypes Rtp::getPayloadType() const
 {
-	return (rtpPayloadTypes)(packet.secondOctet&0x7F); //0b01111111
+	return (rtpPayloadTypes)(packet.secondOctet & 0x7F); //0b01111111
 }
 
 void Rtp::setSeqNum(uint16_t seqNum)
@@ -119,7 +117,6 @@ void Rtp::setTimestamp(uint32_t time)
 {
 	packet.timeStamp = time;
 }
-
 
 void Rtp::setSSRC(uint32_t ssrc)
 {
@@ -141,8 +138,6 @@ void Rtp::setHeaderExtension(extensionType pointer) {
 	headerExtention = *pointer;
 }
 
-
-
 bool Rtp::addCSRC(uint32_t SRC) {
 	if (getCSRCcount()<15){
 		setCSRCcount(getCSRCcount() + 1);
@@ -152,20 +147,29 @@ bool Rtp::addCSRC(uint32_t SRC) {
 	return false;
 }
 
+void Rtp::setSizeofPayload(uint32_t size)
+{
+	sizeofPayload = size;
+}
 
-
-
+void Rtp::setPayload(char * data)
+{
+	payload = data;
+}
 
 
 //----------------PACKET POINTERS----------------
 //todo add extension to passed data;--done
+//todo add payload;
+//todo add padding;
 
-//check for null when used
+
+//check for null when used + free memory after use.
 uint8_t* Rtp::createRtpPacket() const				
 {
-	int packetLength = MIN_HEADER_LENGTH + sizeof(CSRC);
+	int packetLength = MIN_HEADER_LENGTH + sizeof(CSRC)+sizeofPayload;//+sizeof(payload);
 	if (getExtension()) {
-		int packetLength = MIN_HEADER_LENGTH + sizeof(CSRC) + EXTENTION_HEADER_PROFILE_LENGTH + extensionLength * sizeof(uint32_t);
+		int packetLength = MIN_HEADER_LENGTH + sizeof(CSRC) + EXTENTION_HEADER_PROFILE_LENGTH + extensionLength * sizeof(uint32_t)+sizeofPayload; //+sizeof(payload);
 	}
 	uint8_t *packetPointer = (uint8_t*)malloc(packetLength);
 	memcpy(packetPointer,&packet,MIN_HEADER_LENGTH);
@@ -175,6 +179,7 @@ uint8_t* Rtp::createRtpPacket() const
 		memcpy(packetPointer + MIN_HEADER_LENGTH + sizeof(CSRC)+sizeof(extensionNum), &extensionLength, sizeof(extensionLength));
 		memcpy(packetPointer + MIN_HEADER_LENGTH + sizeof(CSRC) + EXTENTION_HEADER_PROFILE_LENGTH, headerExtension, extensionLength * sizeof(uint32_t));
 	}
+	memcpy(packetPointer + MIN_HEADER_LENGTH + sizeof(CSRC) + EXTENTION_HEADER_PROFILE_LENGTH + extensionLength * sizeof(uint32_t),payload,(sizeofPayload)*sizeofPayload);
 	return packetPointer;
 }
 
@@ -183,7 +188,7 @@ template <typename rtpIO>
 void Rtp::setRtpPacket(rtpIO input)
 {
 	uint8_t* inpacket = input;
-	uint8_t* start = inpacket;
+	//uint8_t* start = inpacket;
 	packet = *(rtpPacket*)inpacket;
 	inpacket += MIN_HEADER_LENGTH;
 	/*
@@ -199,7 +204,7 @@ void Rtp::setRtpPacket(rtpIO input)
 	inpacket += 4;
 	*/
 	int cc = getCSRCcount();
-	memcpy((CSRC.data()), inpacket, cc * sizeof(uint32_t));
+	memcpy((CSRC.data()), inpacket, cc * sizeof(uint32_t));//logic error??
 	if (getExtension()) {
 
 		extensionNum = *(uint16_t*)inpacket;
@@ -210,21 +215,99 @@ void Rtp::setRtpPacket(rtpIO input)
 		memcpy((headerExtension), inpacket, extensionLength * sizeof(uint32_t));
 
 	}
-	free(start);
-	
-	
+	payload = (char*)malloc(sizeofPayload * sizeof(payload));
+	payload = memcpy(payload, inpacket, sizeofPayload * sizeof(payload));
+	//free(input);									// --!!!!!!! Memory leak?
 }
 
 
 
+//
+// ----------------RTCP ----------------
+//
 
-/*bool Rtp::validateHeader(rtpPacket inpacket) const
+// 0-1 version, 2 padding, 3-7 RECEPTION Report count
+
+
+Rtcp::Rtcp()
 {
-	if (getVersion()!=2) {
-		return false;
+	header.firstOctet = 0x80;
+}
+
+void Rtcp::setVersion(int version)
+{
+	header.firstOctet = (header.firstOctet & 0x3F) + (version << 6);
+}
+
+int Rtcp::getVersion() const
+{
+	return (header.firstOctet & 0xC0)>>6 ;
+}
+
+void Rtcp::setPadding(bool padding)
+{
+	if (padding) {
+		header.firstOctet |= 0x20; //0b00100000
 	}
-	if (packet.secondOctet)
+	else {
+		header.firstOctet &= 0xDF; //0b11011111
+	}
+}
 
+bool Rtcp::getPadding() const
+{
+	return ((header.firstOctet & 0x20)>>5)==1;
+}
 
-	return true;
-}*/
+void Rtcp::setReportCount(int rc)
+{
+	if (rc < 31)
+		header.firstOctet = (header.firstOctet & 0xE0) + rc;
+}
+
+int Rtcp::getReportCount()
+{
+	return header.firstOctet&0x1F;
+}
+
+void Rtcp::setPayload(rtcpPayloadTypes pc)
+{
+	header.payloadType = pc;
+}
+
+void Rtcp::setHeaderLength(uint16_t length)
+{
+	header.length = length;
+}
+
+void Rtcp::setHeaderSSRC(uint32_t ssrc)
+{
+	SSRC = ssrc;
+}
+
+Rtcp::reportBlock::reportBlock(uint32_t ssr, uint8_t fl, uint32_t pl, uint32_t hSeqNum, uint32_t jitter, uint32_t lsr, uint32_t dslsr)
+{
+	ssrc = ssr;
+	fractionLost = fl;
+	packetsLost = (pl&0x00FFFFFF);
+	highestSeqNum = hSeqNum;
+	interarrivalJitter = jitter;
+	lastSR = lsr;
+	delaySinceLSR = dslsr;
+}
+
+Rtcp::senderInfo::senderInfo(uint64_t ntpTs, uint32_t rtpTs, uint32_t pc, uint32_t oc)
+{
+	ntpTimestamp = ntpTs;
+	rtpTimestamp = rtpTs;
+	packetCount = pc;
+	octetCount = oc;
+}
+
+Rtcp::sdesItem::sdesItem(rtpSdesTypes type, uint32_t length, char * data)
+{
+	rtpSdesType = type;
+	itemLength = length;
+	item = (char*)malloc(length * sizeof(char));
+	memcpy(item, data, length * sizeof(char));
+}

@@ -102,16 +102,21 @@ namespace rtp
 
 		bool addCSRC(uint32_t);
 
-/*
-		void setPayload(int* payload);
-		int* getPayload() const;
-*/
+
+		void setSizeofPayload(uint32_t size);
+		uint32_t getSizeofPayload() { return sizeofPayload; }
+
+
+		void setPayload(char* data);
+		char* getPayload() { return payload; }
+
 		
 		
 
 		uint8_t* createRtpPacket() const;
 		template <typename rtpIO>
 		void setRtpPacket(rtpIO input);
+			
 
 	
 		
@@ -124,10 +129,13 @@ namespace rtp
 		uint16_t extensionNum;
 		uint16_t extensionLength;
 		void* headerExtension;
+		uint32_t sizeofPayload;
+		char* payload;
 	};
-/*
+
 	class Rtcp
 	{
+
 	public :
 		enum rtcpPayloadTypes {
 
@@ -154,9 +162,10 @@ namespace rtp
 		};
 
 		struct sdesItem {
-			uint8_t rtpSdesType;
-			uint32_t length;
-
+			rtpSdesTypes rtpSdesType:8;
+			uint32_t itemLength;
+			char* item;
+			sdesItem(rtpSdesTypes type, uint32_t length, char* item);
 		};
 
 
@@ -165,6 +174,7 @@ namespace rtp
 			uint32_t rtpTimestamp;
 			uint32_t packetCount;
 			uint32_t octetCount;
+			senderInfo(uint64_t ntpTs,uint32_t rtpTs, uint32_t pc, uint32_t oc);
 		};
 
 		struct reportBlock {
@@ -175,14 +185,14 @@ namespace rtp
 			uint32_t interarrivalJitter;
 			uint32_t lastSR;
 			uint32_t delaySinceLSR;
+			reportBlock(uint32_t ssrc, uint8_t fl, uint32_t pl, uint32_t hSeqNum, uint32_t jitter, uint32_t lastSR , uint32_t dslsr);
 		};
 
-
 		struct rtcpHeader {
-			std::bitset<8> firstOctet; // 0-1 version, 2 padding, 3-7 RECEPTION Report count
-			uint8_t payloadType;
+			uint8_t firstOctet; // 0-1 version, 2 padding, 3-7 RECEPTION Report count
+			rtcpPayloadTypes payloadType:8;
 			uint16_t length;
-			uint32_t SSRC;
+
 		};
 
 		Rtcp();
@@ -194,23 +204,52 @@ namespace rtp
 		void setPadding(bool padding = false);
 		bool getPadding() const;
 
+		void setReportCount(int rc);
+		int getReportCount();
 
 		void setPayload(rtcpPayloadTypes pc);
-		rtcpPayloadTypes getPayload() const;
+		rtcpPayloadTypes getPayload() const { return header.payloadType; }
 
-		void setLength(uint16_t length);
-		uint16_t getLength() const;
+		void setHeaderLength(uint16_t length);
+		uint16_t getHeaderLength() const { return header.length; }
 
-		void setSSRC(uint32_t ssrc);
-		uint32_t getSSRC() const;
+		void setHeaderSSRC(uint32_t ssrc);
+		uint32_t getsHeaderSSRC() const { return SSRC; }
 
 
+
+
+
+
+
+
+
+
+
+
+		uint8_t* generateRtcpPacket(){
+		}
+
+		template<typename rtcpIO>
+		void setRtcpPacket(rtcpIO inpacket) {
+
+		}
 
 		
+		bool addReportBlock(reportBlock block);
+		
+		std::vector<reportBlock> getReportBlocks() { return reports; }
 
 
+
+		bool addSdesItem(sdesItem item);
+		std::vector<sdesItem> getSdesItems() { return items; }
+
+	private:
+		rtcpHeader header;
+		std::vector<reportBlock> reports;
+		std::vector<sdesItem> items;
+		uint32_t SSRC;
 
 	};
-	*/
-
 }
