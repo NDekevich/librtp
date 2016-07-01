@@ -1,5 +1,7 @@
 #include "RTP.h"
 #include <stdlib.h>
+#include <iostream>
+
 //#define STRICT
 
 
@@ -10,20 +12,27 @@ using namespace rtp;
 Rtp::Rtp(bool padding, bool extHeader) {
 	
 	packet.firstOctet=0x80;			// 10000000 (v = 0b10 = 0d2)
+	setPadding(padding);
+	setExtension(extHeader);
+	/*
 	if (padding) {
-		packet.firstOctet += 32; 
+		packet.firstOctet |= 0x20; //0b00100000
+	}
+	else {
+		packet.firstOctet &= 0xDF; //0b11011111
 	}
 	if (extHeader) {
 		packet.firstOctet += 16;
 	}
+	*/
 	packet.secondOctet = 0;			// 00000000 ( m = 0, pt = 0(pcmu))
 	std::vector<uint32_t> CSRC(0);
 	extensionLength = 0;
 	extensionNum = 0;
 }
 
-template <typename rtpIO>
-Rtp::Rtp(rtpIO input)
+//template <typename rtpIO>
+Rtp::Rtp(uint8_t* input)
 {
 	setRtpPacket(input);
 }
@@ -86,10 +95,10 @@ int Rtp::getCSRCcount() const
 void Rtp::setMarker(bool marker)
 {
 	if (marker) {
-		packet.firstOctet |= 0x80; //0b10000000
+		packet.secondOctet |= 0x80; //0b10000000
 	}
 	else {
-		packet.firstOctet &= 0x7F; //0b01111111
+		packet.secondOctet &= 0x7F; //0b01111111
 	}
 }
 
@@ -152,72 +161,105 @@ void Rtp::setSizeofPayload(uint32_t size)
 	sizeofPayload = size;
 }
 
-void Rtp::setPayload(char * data)
+void Rtp::setPayload(uint8_t * data)
 {
 	payload = data;
 }
 
 
+
+
 //----------------PACKET POINTERS----------------
-//todo add extension to passed data;--done
-//todo add payload;
+//todo add payload; --done
 //todo add padding;
+//todo add calcuation of payload size(depending on format of it)
+//
+//
+//
+//
 
 
-//check for null when used + free memory after use.
+std::shared_ptr<uint8_t> Rtp::createRtpPacket() const 
+{
+	int length;
+	length = MIN_HEADER_LENGTH + sizeof(CSRC.data())*CSRC.size() + sizeofPayload * sizeof(payload);
+	length += getExtension() ? (EXTENTION_HEADER_PROFILE_LENGTH + extensionLength * sizeof(uint32_t)):0;
+	//length += getPadding() ?() : ; //add test for padding
+	std::shared_ptr<uint8_t> packetPointer(new uint8_t[length]);
+	uint8_t* memloc = packetPointer.get();
+	memcpy(memloc, &packet, MIN_HEADER_LENGTH);
+	memloc += MIN_HEADER_LENGTH; 
+	memcpy(memloc, CSRC.data(), CSRC.size() * sizeof(uint32_t));
+	memloc += CSRC.size() * sizeof(uint32_t);
+	if (getExtension()) {
+		memcpy(memloc, &extensionNum, sizeof(extensionNum));
+		memloc += sizeof(extensionNum);
+		memcpy(memloc, &extensionLength, sizeof(extensionLength));
+		memloc += sizeof(extensionLength);
+		memcpy(memloc, headerExtension, extensionLength * sizeof(headerExtension));
+		memloc += extensionLength * sizeof(headerExtension);
+	}
+	memcpy(memloc, payload, sizeofPayload * sizeof(payload));
+	memloc += sizeofPayload * sizeof(payload);
+/*
+	FOR TEST
+	std::cout << std::endl << "LENGTH " << length << std::endl;
+	std::cout << std::endl << "MEMLOC " << memloc - packetPointer.get() << std::endl;
+	std::cout << std::endl << "VVPXCC  " << (int)*packetPointer.get() << std::endl;
+*/
+	return packetPointer;
+}
+
+
+
+
+/*//check for null when used + free memory after use.
 uint8_t* Rtp::createRtpPacket() const				
 {
-	int packetLength = MIN_HEADER_LENGTH + sizeof(CSRC)+sizeofPayload;//+sizeof(payload);
+	int packetLength = MIN_HEADER_LENGTH + sizeof(CSRC) + sizeofPayload*sizeof(payload);
 	if (getExtension()) {
-		int packetLength = MIN_HEADER_LENGTH + sizeof(CSRC) + EXTENTION_HEADER_PROFILE_LENGTH + extensionLength * sizeof(uint32_t)+sizeofPayload; //+sizeof(payload);
+		int packetLength = MIN_HEADER_LENGTH + sizeof(CSRC) + EXTENTION_HEADER_PROFILE_LENGTH + extensionLength * sizeof(uint32_t) + sizeofPayload *sizeof(payload);
 	}
-	uint8_t *packetPointer = (uint8_t*)malloc(packetLength);
+	uint8_t *packetPointer = (uint8_t*)malloc(packetLength*sizeof(uint8_t));
 	memcpy(packetPointer,&packet,MIN_HEADER_LENGTH);
 	memcpy(packetPointer + MIN_HEADER_LENGTH, CSRC.data(), sizeof(CSRC));
 	if (getExtension()) {
 		memcpy(packetPointer + MIN_HEADER_LENGTH + sizeof(CSRC), &extensionNum, sizeof(extensionNum));
-		memcpy(packetPointer + MIN_HEADER_LENGTH + sizeof(CSRC)+sizeof(extensionNum), &extensionLength, sizeof(extensionLength));
+		memcpy(packetPointer + MIN_HEADER_LENGTH + sizeof(CSRC) + sizeof(extensionNum), &extensionLength, sizeof(extensionLength));
 		memcpy(packetPointer + MIN_HEADER_LENGTH + sizeof(CSRC) + EXTENTION_HEADER_PROFILE_LENGTH, headerExtension, extensionLength * sizeof(uint32_t));
 	}
-	memcpy(packetPointer + MIN_HEADER_LENGTH + sizeof(CSRC) + EXTENTION_HEADER_PROFILE_LENGTH + extensionLength * sizeof(uint32_t),payload,(sizeofPayload)*sizeofPayload);
+	memcpy((packetPointer + MIN_HEADER_LENGTH + sizeof(CSRC)), payload, sizeof(payload));// *sizeofPayload);
 	return packetPointer;
+	//(getExtension() ? (EXTENTION_HEADER_PROFILE_LENGTH + extensionLength * sizeof(uint32_t)) : 0))
 }
-
+*/
 
 template <typename rtpIO>
 void Rtp::setRtpPacket(rtpIO input)
 {
 	uint8_t* inpacket = input;
-	//uint8_t* start = inpacket;
+	
 	packet = *(rtpPacket*)inpacket;
 	inpacket += MIN_HEADER_LENGTH;
-	/*
-	packet.firstOctet = *inpacket++;
-	packet.secondOctet = *inpacket++;
-	//uint16_t* inpacket = (uint16_t*)inpacket;
-	packet.seqNum = (uint16_t)*inpacket;
-	inpacket += 2;
-	//uint32_t* inpacket = (uint32_t*)inpacket;
-	packet.timeStamp = (uint32_t)*inpacket++;
-	inpacket += 4;
-	packet.SSRC = (uint32_t)*inpacket++;
-	inpacket += 4;
-	*/
 	int cc = getCSRCcount();
-	memcpy((CSRC.data()), inpacket, cc * sizeof(uint32_t));//logic error??
+	for (int i = 0; i < cc; i++) {
+		uint32_t temp = *(uint32_t*)inpacket;
+		inpacket += 4;
+		CSRC.push_back(temp);
+	}
 	if (getExtension()) {
-
 		extensionNum = *(uint16_t*)inpacket;
 		inpacket += 2;
 		extensionLength = *(uint16_t*)inpacket;
 		inpacket += 2;
 		headerExtension = (void*)malloc(extensionLength * sizeof(uint32_t));
 		memcpy((headerExtension), inpacket, extensionLength * sizeof(uint32_t));
-
+		inpacket += extensionLength * 4;
 	}
-	payload = (char*)malloc(sizeofPayload * sizeof(payload));
-	payload = memcpy(payload, inpacket, sizeofPayload * sizeof(payload));
-	//free(input);									// --!!!!!!! Memory leak?
+	payload = (uint8_t*)malloc(sizeofPayload * sizeof(payload));
+											 
+	memcpy(payload, inpacket, sizeofPayload * sizeof(payload));
+	//std::cout << "part5";
 }
 
 

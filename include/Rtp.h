@@ -1,7 +1,9 @@
 //#pragma once
 #include <bitset>
 #include <stdint.h>
+#include <memory>
 #include <vector>
+
 
 #define MIN_HEADER_LENGTH 12
 #define EXTENTION_HEADER_PROFILE_LENGTH 4
@@ -12,9 +14,9 @@ namespace rtp
 	class Rtp
 	{
 	public: 
-		Rtp(bool padding = false, bool headerExt = false);
-		template<typename rtpIO>
-		Rtp(rtpIO input);
+		Rtp(bool padding, bool headerExt);
+		//template<typename rtpIO>
+		Rtp(uint8_t* inpacket);
 
 	
 
@@ -59,6 +61,7 @@ namespace rtp
 			uint32_t timeStamp;
 			uint32_t SSRC;
 		};
+		
 
 		
 
@@ -87,7 +90,7 @@ namespace rtp
 		uint32_t getTimestamp() const { return packet.timeStamp; }
 
 		void setSSRC(uint32_t ssrc);
-		uint32_t getSSRC() const { return packet.seqNum; }
+		uint32_t getSSRC() const { return packet.SSRC; }
 
 
 		void setExtensionLength(uint16_t length);
@@ -101,19 +104,19 @@ namespace rtp
 
 
 		bool addCSRC(uint32_t);
-
+		std::vector<uint32_t> getCSRC() const { return CSRC; }
 
 		void setSizeofPayload(uint32_t size);
 		uint32_t getSizeofPayload() { return sizeofPayload; }
 
 
-		void setPayload(char* data);
-		char* getPayload() { return payload; }
+		void setPayload(uint8_t* data);
+		uint8_t* getPayload() { return payload; }
 
 		
 		
 
-		uint8_t* createRtpPacket() const;
+		std::shared_ptr<uint8_t> createRtpPacket() const;
 		template <typename rtpIO>
 		void setRtpPacket(rtpIO input);
 			
@@ -129,10 +132,14 @@ namespace rtp
 		uint16_t extensionNum;
 		uint16_t extensionLength;
 		void* headerExtension;
-		uint32_t sizeofPayload;
-		char* payload;
+		uint32_t sizeofPayload = 1;
+		uint8_t* payload;
 	};
 
+
+
+
+//====================RTCP=========================
 	class Rtcp
 	{
 
