@@ -117,6 +117,8 @@ Rtp::rtpPayloadTypes Rtp::getPayloadType() const
 	return (rtpPayloadTypes)(packet.secondOctet & 0x7F); //0b01111111
 }
 
+//remove setters/getters below;
+
 void Rtp::setSeqNum(uint16_t seqNum)
 {
 	packet.seqNum = seqNum;
@@ -168,24 +170,28 @@ void Rtp::setPayload(uint8_t * data)
 
 
 
-
-//----------------PACKET POINTERS----------------
-//todo add payload; --done
-//todo add padding;
-//todo add calcuation of payload size(depending on format of it)
+// ----------------PACKET POINTERS----------------
+// todo add payload; --done
+// todo add padding;
+// todo add calcuation of payload size(depending on format of it)
 //
+// todo add Host to network order (endianess)
 //
-//
+// try with char arrays;
+// remove pointer arithmetic
+// 
 //
 
 
 std::shared_ptr<uint8_t> Rtp::createRtpPacket() const 
 {
+	
 	int length;
 	length = MIN_HEADER_LENGTH + sizeof(CSRC.data())*CSRC.size() + sizeofPayload * sizeof(payload);
 	length += getExtension() ? (EXTENTION_HEADER_PROFILE_LENGTH + extensionLength * sizeof(uint32_t)):0;
-	//length += getPadding() ?() : ; //add test for padding
-	std::shared_ptr<uint8_t> packetPointer(new uint8_t[length]);
+	//length += getPadding() ?() : ; //add  padding	
+	std::shared_ptr<uint8_t> packetPointer(new uint8_t[length]); // does not work;
+			
 	uint8_t* memloc = packetPointer.get();
 	memcpy(memloc, &packet, MIN_HEADER_LENGTH);
 	memloc += MIN_HEADER_LENGTH; 
@@ -203,10 +209,11 @@ std::shared_ptr<uint8_t> Rtp::createRtpPacket() const
 	memloc += sizeofPayload * sizeof(payload);
 /*
 	FOR TEST
-	std::cout << std::endl << "LENGTH " << length << std::endl;
+		std::cout << std::endl << "LENGTH " << length << std::endl;
 	std::cout << std::endl << "MEMLOC " << memloc - packetPointer.get() << std::endl;
 	std::cout << std::endl << "VVPXCC  " << (int)*packetPointer.get() << std::endl;
 */
+	
 	return packetPointer;
 }
 
@@ -256,9 +263,11 @@ void Rtp::setRtpPacket(rtpIO input)
 		memcpy((headerExtension), inpacket, extensionLength * sizeof(uint32_t));
 		inpacket += extensionLength * 4;
 	}
+	std::cout << std::endl << " value " << *inpacket  << std::endl;
 	payload = (uint8_t*)malloc(sizeofPayload * sizeof(payload));
 											 
 	memcpy(payload, inpacket, sizeofPayload * sizeof(payload));
+	std::cout << std::endl << " value 2 " << *payload << std::endl;
 	//std::cout << "part5";
 }
 
@@ -270,86 +279,3 @@ void Rtp::setRtpPacket(rtpIO input)
 
 // 0-1 version, 2 padding, 3-7 RECEPTION Report count
 
-
-Rtcp::Rtcp()
-{
-	header.firstOctet = 0x80;
-}
-
-void Rtcp::setVersion(int version)
-{
-	header.firstOctet = (header.firstOctet & 0x3F) + (version << 6);
-}
-
-int Rtcp::getVersion() const
-{
-	return (header.firstOctet & 0xC0)>>6 ;
-}
-
-void Rtcp::setPadding(bool padding)
-{
-	if (padding) {
-		header.firstOctet |= 0x20; //0b00100000
-	}
-	else {
-		header.firstOctet &= 0xDF; //0b11011111
-	}
-}
-
-bool Rtcp::getPadding() const
-{
-	return ((header.firstOctet & 0x20)>>5)==1;
-}
-
-void Rtcp::setReportCount(int rc)
-{
-	if (rc < 31)
-		header.firstOctet = (header.firstOctet & 0xE0) + rc;
-}
-
-int Rtcp::getReportCount()
-{
-	return header.firstOctet&0x1F;
-}
-
-void Rtcp::setPayload(rtcpPayloadTypes pc)
-{
-	header.payloadType = pc;
-}
-
-void Rtcp::setHeaderLength(uint16_t length)
-{
-	header.length = length;
-}
-
-void Rtcp::setHeaderSSRC(uint32_t ssrc)
-{
-	SSRC = ssrc;
-}
-
-Rtcp::reportBlock::reportBlock(uint32_t ssr, uint8_t fl, uint32_t pl, uint32_t hSeqNum, uint32_t jitter, uint32_t lsr, uint32_t dslsr)
-{
-	ssrc = ssr;
-	fractionLost = fl;
-	packetsLost = (pl&0x00FFFFFF);
-	highestSeqNum = hSeqNum;
-	interarrivalJitter = jitter;
-	lastSR = lsr;
-	delaySinceLSR = dslsr;
-}
-
-Rtcp::senderInfo::senderInfo(uint64_t ntpTs, uint32_t rtpTs, uint32_t pc, uint32_t oc)
-{
-	ntpTimestamp = ntpTs;
-	rtpTimestamp = rtpTs;
-	packetCount = pc;
-	octetCount = oc;
-}
-
-Rtcp::sdesItem::sdesItem(rtpSdesTypes type, uint32_t length, char * data)
-{
-	rtpSdesType = type;
-	itemLength = length;
-	item = (char*)malloc(length * sizeof(char));
-	memcpy(item, data, length * sizeof(char));
-}
