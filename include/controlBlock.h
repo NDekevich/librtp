@@ -10,7 +10,47 @@ public:
 	controlBlock();
 	~controlBlock();
 
-	struct metaData {
+
+
+
+
+	/*
+	int* rawToCodec(int codecType,int* data);
+
+	int* codecToRaw(int codecType, int* data);
+	*/
+	
+	int createOutput(std::string ipAdress, int port);
+
+	int createInput(int port);
+
+	bool sendData(int connectionID, uint8_t data);
+	
+	uint8_t receiveData(int connectionID);
+
+
+
+	
+
+
+
+
+private:
+
+	struct outputInfo {
+		
+		boost::asio::ip::udp::endpoint* endpoint;
+		boost::asio::ip::udp::socket* socket;
+
+
+		uint32_t packetsSent;
+		uint32_t packetsReceived;
+		outputInfo();
+	};
+
+	struct inputInfo {
+		
+		boost::asio::ip::udp::socket socket;
 		boost::asio::ip::udp::endpoint endpoint;
 		uint32_t packetsRecieved;
 		uint32_t octetsRecieved;
@@ -20,43 +60,16 @@ public:
 		uint32_t lastRtpTimestamp;
 		uint32_t lastSR;
 		uint32_t jitter;
+		inputInfo();
 	};
 
 
-	uint32_t generateRtpTimestamp();
 
-	uint32_t generateSeqNum();
-
-	uint64_t getCurrentNtpTimestamp();
-
-	template<typename IOPacket>
-	void receivePacket(IOPacket);
-	
-
-	void sentRtcpPacket(int data, int type, int SSRC);
-	void sentRtpPacket(int data, int payload, int SSRC); //chose type
-	/*
-	int* rawToCodec(int codecType,int* data);
-
-	int* codecToRaw(int codecType, int* data);
-	*/
-
-
-	bool createNewListenerSocket(boost::asio::ip::udp::endpoint endpoint);
-	
-	bool createNewSenderSocket(boost::asio::ip::udp::endpoint endpoint);
-
-	
-
-
-
-
-private:
-	std::vector<rtp::Rtp> rtpPackets;
-	std::vector<rtcp::Rtcp> rtcpPackets;
-	std::unordered_map<uint32_t,metaData> recievedPackets;//CSRC <-> data about that sender
-	uint32_t packetsSent;
-	uint32_t octetsSent;
+	boost::asio::io_service service;
+	std::unordered_map<int, outputInfo> outputPort;	
+	std::unordered_map<int, inputInfo> inputPort;
+	int outputIdCount;
+	int inputIdCount;
 
 
 };
