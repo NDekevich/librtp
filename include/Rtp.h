@@ -14,7 +14,7 @@ namespace rtp
 	class Rtp
 	{
 	public: 
-		Rtp(bool padding, bool headerExt);
+		Rtp();
 		//template<typename rtpIO>
 		Rtp(uint8_t* inpacket);
 
@@ -113,8 +113,9 @@ namespace rtp
 		void setPayload(uint8_t* data);
 		uint8_t* getPayload() { return payload; }
 
-		
-		
+		uint8_t* getHeaderExtension() { return headerExtension; }
+		void setHeaderExtension(uint8_t* ext);
+
 
 		std::shared_ptr<uint8_t> createRtpPacket() const;
 		template <typename rtpIO>
@@ -131,10 +132,11 @@ namespace rtp
 		std::vector<uint32_t> CSRC;
 		uint16_t extensionNum;
 		uint16_t extensionLength;
-		void* headerExtension;
+		uint8_t* headerExtension;
 		uint32_t sizeofPayload = 1;
 		uint8_t* payload;
 	};
+
 
 
 

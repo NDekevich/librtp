@@ -4,6 +4,7 @@
 
 controlBlock::controlBlock()
 {
+	
 }
 
 
@@ -11,21 +12,11 @@ controlBlock::~controlBlock()
 {
 }
 
-/*
-int controlBlock::createOutput(std::string ipAdress, int port)
+void controlBlock::setSdesItems(rtcp::Rtcp::rtpSdesTypes type, std::string value)
 {
-	//add block
-	int connectionID = outputIdCount++;
-	//block
-	boost::asio::ip::udp::endpoint ep(boost::asio::ip::address::from_string(ipAdress), port);
-	boost::asio::ip::udp::socket socket(service);
-	socket.connect(ep);
-	
-	outputPort[connectionID] = outputInfo();
-	outputPort[connectionID].endpoint = &ep;
-	outputPort[connectionID].socket = &socket;
-
-
-	return connectionID;
+	if (((int)type > 0)&&((int)type<15)) {
+		outInfo.sdesInfo[(int)type - 1] = value;
+	}
 }
-	*/
+
+
