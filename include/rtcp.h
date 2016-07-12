@@ -50,9 +50,9 @@ public:
 			sdesItem();
 		};
 
-
 		struct senderInfo {
-			uint64_t ntpTimestamp;
+			uint32_t ntpSecondsTimestamp;
+			uint32_t ntpFractionTimestamp;
 			uint32_t rtpTimestamp;
 			uint32_t packetCount;
 			uint32_t octetCount;
@@ -105,9 +105,6 @@ public:
 	
 		template<typename rtcpPacket>
 		void setRtcpPacket(rtcpPacket inpacket);
-
-		
-
 
 	private:
 		rtcpHeader header;
