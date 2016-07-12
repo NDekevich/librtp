@@ -8,35 +8,45 @@ class controlBlock
 {
 public:
 	controlBlock();
+	
 	~controlBlock();
+
+	//TEMPLATES ARE PLACEHOLDERS=d
 
 	template <typename rtpPacket>	
 	rtpPacket packRtp(uint8_t* data);
 	template <typename rtpPacket>
 	uint8_t* unpackRtp(rtpPacket packet);
 
-	template <typename rtcpPacket>
-	rtcpPacket packRtcp(uint8_t* data);
-	template <typename rtcpPacket>
-	void unpackRtcp(rtcpPacket packet);
+	template <typename rtpPacket>
+	rtpPacket packRtcp(uint8_t* data);
+	template <typename rtpPacket>
+	void unpackRtcp( rtpPacket packet);
 
-	/*
+	void initializeOut();
+	
 	void setRtpPadding(bool p);
 	void setRtpExtension(bool x);
 	void setRtpPayload(char* payload, int payloadLength);
 	void setRtpMarker(bool m);
-	*/
-
-	void setSdesItems(rtcp::Rtcp::rtpSdesTypes type, std::string value);
-
-	rtp::Rtp rtpPacker;
 	
-	rtcp::Rtcp rtcpPacker;
-	
+	void setRtpExtLength(uint16_t length);
+	void setRtpExtProfile(uint16_t profile);
+	void setRtpExtData(uint32_t* data);
+
+	void setSdesItems(rtcp::Rtcp::rtpSdesTypes type, std::string value);	
 	void setRtpPrecodedFormat(int format);
-	
 	void setRtpCoding(bool codingOn);
-	
+
+	uint32_t calculatePacketLoss();
+	uint32_t calculateRtcpInterval();
+
+	void decodeRtpPacket();
+	void decodeRtcpPacket();
+
+	rtp::Rtp rtpPacker();
+	rtcp::Rtcp rtcpPacker();
+
 
 private:
 	bool rtpCoding = true;
@@ -56,7 +66,7 @@ private:
 	};
 
 
-
+	
 	struct outputInfo {
 		uint32_t ssrc;
 		uint32_t packetsSent;
@@ -67,9 +77,17 @@ private:
 		uint32_t pmembers;
 		uint32_t members;
 		uint32_t senders;
+		uint32_t rtcp_bw;
+		uint32_t avg_rtcp_size;
+
+		bool we_sent;
+		bool initial;
+
+
 		bool padding;
 		bool headerExt;
 		std::string sdesInfo[14];
+
 
 		outputInfo();
 	} outInfo;
@@ -88,7 +106,7 @@ private:
 		sdesItems sdesInfo;
 		inputInfo();
 	} inInfo;
-
+	
 	boost::asio::io_service service;
 	std::unordered_map<int, outputInfo> outputPort;	
 	std::unordered_map<int, inputInfo> inputPort;
@@ -96,10 +114,10 @@ private:
 	int inputIdCount;
 	
 	
-	
-	uint32_t getRtpTimestamp();
+	uint32_t generateSSRC();
+	uint32_t generateRtpTimestamp();
 	uint32_t getNtpTimestamp();
-	uint32_t getSeqNum();
+	uint32_t generateSeqNum();
 	uint32_t countJitter();
 	
 };

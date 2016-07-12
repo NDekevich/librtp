@@ -1,4 +1,5 @@
-#include <bitset>
+
+
 #include <stdint.h>
 #include <memory>
 #include <vector>
@@ -93,13 +94,11 @@ public:
 		void setHeaderSSRC(uint32_t ssrc);
 		uint32_t getsHeaderSSRC() const { return SSRC; }
 
-
 		bool addReportBlock(reportBlock block);
 		std::vector<reportBlock> getReportBlocks() { return reports; }
 
 		bool addSdesItem(sdesItem item);
 		std::vector<sdesItem> getSdesItems() { return items; }
-
 
 		template <typename rtcpPacket>
 		rtcpPacket createRtcpPacket(rtcpPayloadTypes type);
@@ -107,7 +106,7 @@ public:
 		template<typename rtcpPacket>
 		void setRtcpPacket(rtcpPacket inpacket);
 
-
+		
 
 
 	private:
