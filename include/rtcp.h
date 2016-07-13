@@ -45,9 +45,9 @@ public:
 
 		struct sdesItem {
 			rtpSdesTypes rtpSdesType : 8;
-			uint32_t itemLength;
+			uint8_t itemLength;
 			char* item;
-			sdesItem();
+			sdesItem(rtpSdesTypes type, uint8_t length, char* item);
 		};
 
 		struct senderInfo {
@@ -56,7 +56,7 @@ public:
 			uint32_t rtpTimestamp;
 			uint32_t packetCount;
 			uint32_t octetCount;
-			senderInfo();
+			senderInfo(uint32_t ntpSecondsTimestamp, uint32_t ntpFractionTimestamp, uint32_t rtpTimestamp, uint32_t packetCount, uint32_t octetCount);
 		};
 
 		struct reportBlock {
@@ -95,14 +95,44 @@ public:
 		uint32_t getsHeaderSSRC() const { return SSRC; }
 
 		bool addReportBlock(reportBlock block);
-		std::vector<reportBlock> getReportBlocks() { return reports; }
+		std::vector<reportBlock> getReportBlocks() { return reports;}
 
 		bool addSdesItem(sdesItem item);
 		std::vector<sdesItem> getSdesItems() { return items; }
 
 		template <typename rtcpPacket>
-		rtcpPacket createRtcpPacket(rtcpPayloadTypes type);
-	
+		rtcpPacket createRtcpPacket(rtcpPayloadTypes type)
+		{
+
+			rtcpPacket packet;
+			int packLength = header.length + 1;
+			uint8_t* packet_pointer;
+
+			switch type:
+			case senderReport:
+				
+				break;
+			case ReceiverReport:
+				
+				break;
+			case SourceDescription:
+				
+				break;
+			case Goodbye:
+				
+				break;
+			case AppDef:
+				
+				break;
+			default:
+				packet = nullptr;
+				
+				break;
+				packet = packet_pointer;
+			return packet;
+
+		}
+
 		template<typename rtcpPacket>
 		void setRtcpPacket(rtcpPacket inpacket);
 
@@ -112,5 +142,7 @@ public:
 		std::vector<sdesItem> items;
 		uint32_t SSRC;
 
+
 	};
 };
+

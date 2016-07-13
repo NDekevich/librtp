@@ -2,7 +2,8 @@
 #include "boost\asio.hpp"
 
 //TODO!!!!!!!!
-controlBlock::controlBlock()
+controlBlock::controlBlock():
+		io_service(new boost::asio::io_service)
 {
 	generateSSRC();
 	initializeOut();
@@ -84,7 +85,7 @@ std::shared_ptr<boost::asio::ip::udp::socket> controlBlock::createOutputSocket(s
 {
 
 	boost::asio::ip::udp::endpoint ep(boost::asio::ip::address::from_string(ip), port);
-	std::shared_ptr<boost::asio::ip::udp::socket> socket(new boost::asio::ip::udp::socket(io_service, ep));
+	std::shared_ptr<boost::asio::ip::udp::socket> socket(new boost::asio::ip::udp::socket(*io_service, ep));
 
 	return socket;
 }
@@ -92,7 +93,8 @@ std::shared_ptr<boost::asio::ip::udp::socket> controlBlock::createOutputSocket(s
 std::shared_ptr<boost::asio::ip::udp::socket> controlBlock::createInputSocket(short port)
 {
 	boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), port);
-	std::shared_ptr<boost::asio::ip::udp::socket> socket(new boost::asio::ip::udp::socket(io_service,ep));
+	std::shared_ptr<boost::asio::ip::udp::socket> socket(new boost::asio::ip::udp::socket(*io_service,ep));
+
 
 	return socket;
 }

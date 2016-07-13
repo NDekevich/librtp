@@ -38,11 +38,9 @@ public:
 	void setRtpCoding(bool codingOn);
 	
 	void createConversationMembrer(uint32_t ssrc);
-
 	
 	uint32_t calculatePacketLoss();
 	uint32_t calculateRtcpInterval();
-
 	
 	uint8_t* decodeRtpPacket(uint8_t* packet);
 	void decodeRtcpPacket(uint8_t* packet);
@@ -50,16 +48,16 @@ public:
 	uint8_t* createRtpPacket(uint8_t* data);
 	uint8_t* createRtcpPacket();
 
-	bool sendRtpPacket(uint8_t* packet, boost::asio::ip::udp::socket socket);
-	bool sendRtpPacket(uint8_t* packet, std::vector<boost::asio::ip::udp::socket> sockets);
+	bool sendRtpPacket(uint8_t* packet, std::shared_ptr<boost::asio::ip::udp::socket> socket);
+	bool sendRtpPacket(uint8_t* packet, std::vector<std::shared_ptr<boost::asio::ip::udp::socket>> sockets);
 
-	bool sendRtcpPacket(uint8_t* packet, boost::asio::ip::udp::socket socket);
-	bool sendRtcpPacket(uint8_t* packet, std::vector<boost::asio::ip::udp::socket> sockets);
+	bool sendRtcpPacket(uint8_t* packet, std::shared_ptr<boost::asio::ip::udp::socket> socket);
+	bool sendRtcpPacket(uint8_t* packet, std::vector<std::shared_ptr<boost::asio::ip::udp::socket>> sockets);
 	
 	std::shared_ptr<boost::asio::ip::udp::socket> createOutputSocket(std::string ip, short port);
 	std::shared_ptr<boost::asio::ip::udp::socket> createInputSocket(short port);
 
-
+	std::shared_ptr<boost::asio::io_service> getService(){return io_service;}
 
 
 private:
@@ -104,7 +102,6 @@ private:
 	
 	struct outputInfo {
 		uint32_t ssrc;
-		
 		uint32_t packetsSent;
 		uint32_t octetsSent;
 		uint32_t timeLastRtcp;
@@ -118,15 +115,14 @@ private:
 
 		bool we_sent;
 		bool initial;
-
 		bool precoded = true;
+		
 		uint32_t precodedFormat = 0;
 
 		bool padding;
 		bool headerExt;
 		bool marker;		
 		std::string sdesInfo[14];
-
 
 		sdesItems items;
 
@@ -135,11 +131,10 @@ private:
 	rtp::Rtp rtpPacketer;
 	rtcp::Rtcp rtcpPacketer;
 
-	boost::asio::io_service io_service;
+	std::shared_ptr<boost::asio::io_service> io_service;
 	std::unordered_map<int, convMember> conversationMembers;
 	int outputIdCount;
 	int inputIdCount;
-	
 	
 	uint32_t generateSSRC();
 	uint32_t generateRtpTimestamp();
@@ -148,4 +143,3 @@ private:
 	uint32_t countJitter();
 	
 };
-
