@@ -195,19 +195,12 @@ std::shared_ptr<uint8_t> Rtp::createRtpPacket() const
 		memloc += sizeof(extensionLength);
 		memcpy(memloc, headerExtension, extensionLength * sizeof(headerExtension));
 		memloc += extensionLength * sizeof(headerExtension);
-		std::cout << "123" << std::endl;
 	}
 	memcpy(memloc, payload, sizeofPayload * sizeof(payload));
 	memloc += sizeofPayload * sizeof(payload);
 
 
-/*	FOR TEST
-	std::cout << getExtension() << std::endl;
-	std::cout << std::endl << "LENGTH " << length << std::endl;
-	std::cout << std::endl << "MEMLOC " << memloc - packetPointer.get() << std::endl;
-//	std::cout << std::endl << "VVPXCC  " << (int)*packetPointer.get() << std::endl;
-*/
-	
+
 	return packetPointer;
 }
 
@@ -220,7 +213,7 @@ template <typename rtpIO>
 void Rtp::setRtpPacket(rtpIO input)
 {
 	uint8_t* inpacket = input;
-	
+	//add validation
 	packet = *(rtpPacket*)inpacket;
 	inpacket += MIN_HEADER_LENGTH;
 	int cc = getCSRCcount();
@@ -241,5 +234,5 @@ void Rtp::setRtpPacket(rtpIO input)
 	payload = (uint8_t*)malloc(sizeofPayload * sizeof(payload));
 											 
 	memcpy(payload, inpacket, sizeofPayload * sizeof(payload));
-	//std::cout << "part5";
+
 }

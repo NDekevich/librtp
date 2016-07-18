@@ -1,5 +1,6 @@
 //#include "libavcodec/avcodec.h"
 #include "boost\asio.hpp"
+#include "boost\array.hpp"
 #include "RTP.h"
 #include "rtcp.h"
 #include <unordered_map>
@@ -48,12 +49,52 @@ public:
 	uint8_t* createRtpPacket(uint8_t* data);
 	uint8_t* createRtcpPacket();
 
-	bool sendRtpPacket(uint8_t* packet, std::shared_ptr<boost::asio::ip::udp::socket> socket);
-	bool sendRtpPacket(uint8_t* packet, std::vector<std::shared_ptr<boost::asio::ip::udp::socket>> sockets);
+
+	template<typename P>
+	bool sendRtpPacket(P packet, std::shared_ptr<boost::asio::ip::udp::socket> socket) 
+	{
+		try {
+
+		}
+		catch (std::exception& e)
+		{
+		
+
+
+		}
+	}
+	
+	template<typename P>
+	bool sendRtpPacket(P packet, std::vector<std::shared_ptr<boost::asio::ip::udp::socket>> sockets);
 
 	bool sendRtcpPacket(uint8_t* packet, std::shared_ptr<boost::asio::ip::udp::socket> socket);
 	bool sendRtcpPacket(uint8_t* packet, std::vector<std::shared_ptr<boost::asio::ip::udp::socket>> sockets);
-	
+
+	template <typename D>
+	bool sendRawData(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket) {
+		try {
+			(*socket).send(boost::asio::buffer(*data));
+
+		}
+		catch (std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			return false;
+		}
+	}
+
+	template <typename D>
+	int receiveRawData(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket) {
+		try {
+			return (*socket).receive(boost::asio::buffer(*data));
+		}
+		catch (std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			return -1;
+		}
+	}
+
 	std::shared_ptr<boost::asio::ip::udp::socket> createOutputSocket(std::string ip, short port);
 	std::shared_ptr<boost::asio::ip::udp::socket> createInputSocket(short port);
 

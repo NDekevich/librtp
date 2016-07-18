@@ -1,15 +1,27 @@
 #include "controlBlock.h"
-#include "boost\asio.hpp"
+
+/*
+working on:
+sending and receiving data from network(via rtp/rtcp);
+
+not working at all yet (blank functions implemented)
+No jitter;
+octet/packet count unrelaible;
+generateSSRC not workign yet=)
+timestamp not working yet(both)
+*/
+
 
 //TODO!!!!!!!!
 controlBlock::controlBlock():
 		io_service(new boost::asio::io_service)
-{
-	generateSSRC();
-	initializeOut();
-	generateSeqNum();
-	generateRtpTimestamp();
 
+{
+	//generateSSRC();
+	initializeOut();
+	//generateSeqNum();
+	//generateRtpTimestamp();
+	
 
 }
 
@@ -18,6 +30,7 @@ controlBlock::~controlBlock()
 {
 }
 //TODO!!!!!!!!
+
 void controlBlock::setSdesItems(rtcp::Rtcp::rtpSdesTypes type, std::string value)
 {
 
@@ -37,9 +50,10 @@ void controlBlock::initializeOut() {
 	outInfo.we_sent = false;
 	//outInfo.rtcp_bw = 123123123;
 	outInfo.initial = true;
-	calculateRtcpInterval();
+//	calculateRtcpInterval();
 
 }
+
 //TODO!!!!!!!!
 uint8_t* controlBlock::decodeRtpPacket(uint8_t * packet)
 {
@@ -73,28 +87,40 @@ void controlBlock::decodeRtcpPacket(uint8_t* packet)  //not scalable
 
 			conversationMembers[rtcpPacketer.getsHeaderSSRC()].packetsReceived++;
 			conversationMembers[rtcpPacketer.getsHeaderSSRC()].octetsReceived += rtcpPacketer.getHeaderLength();
-			conversationMembers[rtcpPacketer.getsHeaderSSRC()].jitter = countJitter();
-			
+			//conversationMembers[rtcpPacketer.getsHeaderSSRC()].jitter = countJitter();		
 		}
 	}
-
-
 }
+
 
 std::shared_ptr<boost::asio::ip::udp::socket> controlBlock::createOutputSocket(std::string ip, short port)
 {
+	try {
+		boost::asio::ip::udp::endpoint ep(boost::asio::ip::address::from_string(ip), port);
+		std::shared_ptr<boost::asio::ip::udp::socket> socket(new boost::asio::ip::udp::socket(*io_service)); 
+		(*socket).connect(ep);
+		return socket;
+	}
+	catch (std::exception& e)
+	{
 
-	boost::asio::ip::udp::endpoint ep(boost::asio::ip::address::from_string(ip), port);
-	std::shared_ptr<boost::asio::ip::udp::socket> socket(new boost::asio::ip::udp::socket(*io_service, ep));
-
-	return socket;
+		std::cerr << e.what() << std::endl;
+		return nullptr;
+	}
 }
 
 std::shared_ptr<boost::asio::ip::udp::socket> controlBlock::createInputSocket(short port)
 {
-	boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), port);
-	std::shared_ptr<boost::asio::ip::udp::socket> socket(new boost::asio::ip::udp::socket(*io_service,ep));
 
-
-	return socket;
+	try {
+		boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), port);
+		std::shared_ptr<boost::asio::ip::udp::socket> socket(new boost::asio::ip::udp::socket(*io_service,ep));
+		
+		return socket;
+	}
+	catch (std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return nullptr;
+	}
 }

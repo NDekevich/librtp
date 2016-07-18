@@ -1,31 +1,28 @@
 #include "rtcp.h"
 
 
-
-rtcp::rtcp()
+using namespace rtcp;
+Rtcp::Rtcp()
 {
+	header.firstOctet = 0b10000000;
 }
 
 
-rtcp::~rtcp()
+Rtcp::~Rtcp()
 {
 }
 
-rtcp::Rtcp::sdesItem::sdesItem(rtpSdesTypes type, uint8_t length, char * item)
-{
-}
-
-void rtcp::Rtcp::setVersion(int version)
+void Rtcp::setVersion(int version)
 {
 	header.firstOctet = (header.firstOctet & 0x3F) + (version << 6); //0b00111111 
 }
 
-int rtcp::Rtcp::getVersion() const
+int Rtcp::getVersion() const
 {
 	return (header.firstOctet & 0xC0) >> 6;  //0b11000000
 }
 
-void rtcp::Rtcp::setPadding(bool padding)
+void Rtcp::setPadding(bool padding)
 {
 	if (padding) {
 		header.firstOctet |= 0x20; //0b00100000
@@ -35,53 +32,158 @@ void rtcp::Rtcp::setPadding(bool padding)
 	}
 }
 
-bool rtcp::Rtcp::getPadding() const
+bool  Rtcp::getPadding() const
 {
 	return ((header.firstOctet & 0x20) >> 5) == 1; //0b00100000
 }
 
-void rtcp::Rtcp::setReportCount(int rc)
+void Rtcp::setReportCount(int rc)
 {
 	header.firstOctet = (header.firstOctet & 0xE0) + rc; //0b11100000
 }
 
-int rtcp::Rtcp::getReportCount()
+int Rtcp::getReportCount()
 {
 	return (header.firstOctet & 0x1F);//0b00011111
 }
 
-void rtcp::Rtcp::setPayload(rtcpPayloadTypes pc)
+void Rtcp::setPayload(rtcpPayloadTypes pc)
 {
-	header.payloadType = pc;
+	header.payloadType = (int)pc;
 }
 
-void rtcp::Rtcp::setHeaderLength(uint16_t length)
+void Rtcp::setHeaderLength(uint16_t length)
 {
 	header.length = length;
 }
 
-void rtcp::Rtcp::setHeaderSSRC(uint32_t ssrc)
+void Rtcp::setHeaderSSRC(uint32_t ssrc)
 {
 	SSRC = ssrc;
 }
 
-bool rtcp::Rtcp::addReportBlock(reportBlock block)
+bool Rtcp::addReportBlock(reportBlock block)
 {
-	if (getReportCount() < 31) {
-		setReportCount(getReportCount() + 1);
+	if (reportCount < 31) {
+		reportCount++;
 		reports.push_back(block);
 		return true;
 	}
 	return false;
 }
 
-bool rtcp::Rtcp::addSdesItem(sdesItem item)
+void Rtcp::resetReportBlock()
 {
-	if (getReportCount() < 31) {
-		setReportCount(getReportCount() + 1);
+	reportCount = 0;
+	reports.clear();
+}
+
+bool Rtcp::addSdesItem(sdesItem item)
+{
+	if (sdesCount < 31) {
+		sdesCount++;
 		items.push_back(item);
 		return true;
 	}
 	return false;
 }
 
+void Rtcp::resetSdesItems()
+{
+	sdesCount = 0;
+	items.clear();
+}
+
+bool Rtcp::addLeaver(uint32_t ssrc)
+{
+
+	if (leaverCount < 31)
+	{
+		otherLeavers.push_back(ssrc);
+		leaverCount++;
+		return true;
+	}
+	return false;
+}
+
+
+void Rtcp::resetLeavers()
+{
+	otherLeavers.clear();
+	leaverCount = 0;
+}
+
+void Rtcp::addGoodbyeText(std::string text)
+{
+	int lengthDifference = 4 - ((text.length() + 3) % 4);
+	for (int i = 0; i < lengthDifference; i++) 
+	{
+		goodbyeText.append(char(0b00000000));
+	}
+	goodbyeTextLength = goodbyeText.length();
+	optGoodbyeText = true;
+}
+
+uint16_t rtcp::Rtcp::calculateHeaderLength()
+{
+	int length = 1;
+	switch (getPayload())
+	{
+	case SenderReport:
+		return 6;
+	case ReceiverReport:
+		return 1 + reportCount * 6;
+	case SourceDescription:
+		for (int i = 0; i < sdesCount; i++) {
+			length += (items[i].itemLength / 4);
+		}
+		return length;
+	case Goodbye:
+		length += otherLeavers.size();
+		length += optGoodbyeText ? ((1 + goodbyeTextLength) / 4) : 0;
+		return length;
+	case AppDef:
+		return 0;
+	default:
+		return 0;
+
+	}
+}
+
+bool Rtcp::validateHeader()
+{
+	if (getVersion() == 2) {
+		if (getPayload() > 199) {
+			if (getPayload() < 206) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+rtcp::Rtcp::reportBlock::reportBlock()
+{
+	ssrc = 0;
+	fractionLost = 0;
+	packetsLost = 0;
+	highestSeqNum = 0;
+	interarrivalJitter = 0;
+	lastSR = 0;
+	delaySinceLSR = 0;
+}
+
+rtcp::Rtcp::sdesItem::sdesItem(int sdesType, std::string data)
+{
+	rtpSdesType = sdesType;
+	itemLength = data.size();
+	std::vector<char>item(data.begin(),data.end());
+}
+
+
+rtcp::Rtcp::sdesItem::sdesItem(int sdesType, std::vector<char> data)
+{
+	rtpSdesType = sdesType;
+	itemLength = data.size();
+	std::vector<char>item(data);
+}
