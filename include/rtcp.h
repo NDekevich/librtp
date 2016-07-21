@@ -51,6 +51,7 @@ namespace rtcp
 			std::vector<char> item;
 			sdesItem(int sdesType, std::string data);
 			sdesItem(int sdesType, std::vector<char> data);
+			sdesItem();
 		};
 
 		struct senderInfo {
@@ -117,6 +118,78 @@ namespace rtcp
 
 		//template <typename rtcpPacket>
 		//rtcpPacket createRtcpPacket()
+
+		std::shared_ptr<std::vector<uint8_t>> createRtcpPacket() {
+			try {
+				header.length = calculateHeaderLength();
+
+				std::shared_ptr<std::vector<uint8_t>> outPacket(new std::vector <uint8_t>);
+				uint8_t* ptr = (uint8_t*)(&header);
+				switch (getPayload())
+				{
+				case SenderReport:
+					(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(header));
+					ptr = (uint8_t*)(&SSRC);
+					(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(SSRC));
+					ptr = (uint8_t*)(&senderReport);
+					(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(senderReport));
+					break;
+
+				case ReceiverReport:
+					setReportCount(reportCount);
+					(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(header));
+					ptr = (uint8_t*)(&SSRC);
+					(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(SSRC));
+					for each (reportBlock rp in reports)
+					{
+						ptr = (uint8_t*)(&rp);
+						(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(rp));
+					}
+					break;
+
+				case SourceDescription:          
+					setReportCount(sdesCount);
+					(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(header));
+					ptr = (uint8_t*)(&SSRC);
+					(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(SSRC));
+					for each(sdesItem si in items) 
+					{
+						(*outPacket).push_back(si.rtpSdesType);
+						(*outPacket).push_back(si.itemLength);
+						(*outPacket).insert((*outPacket).end(), si.item.begin(), si.item.end());	
+					}
+					break;
+
+				case Goodbye:
+					setReportCount(leaverCount);
+					(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(header));
+					ptr = (uint8_t*)(&SSRC);
+					(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(SSRC));
+					for each(uint32_t l in otherLeavers) {
+						ptr = (uint8_t*)(&l);
+						(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(l));
+					}
+					if (optGoodbyeText) {
+						ptr = &goodbyeTextLength;
+						(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(goodbyeTextLength));
+						(*outPacket).insert((*outPacket).end(), goodbyeText.begin(), goodbyeText.end());
+					}
+					break;
+				case AppDef:
+					break;
+				default:
+					break;
+
+				}
+				return outPacket;
+			}
+			catch (std::exception& e) {
+				std::cerr << e.what() << std::endl;
+			}
+		}
+
+
+		/*
 		std::shared_ptr<uint8_t> createRtcpPacket()
 		{
 			uint8_t* packet;
@@ -124,7 +197,6 @@ namespace rtcp
 			int packLength = 4 * (header.length + 1);
 			std::shared_ptr<uint8_t> packet_pointer(new uint8_t[packLength]);
 			packet = (uint8_t*)packet_pointer.get();
-			rtcpPayloadTypes type = getPayload();	
 			switch (getPayload())
 			{
 			case SenderReport:
@@ -187,8 +259,74 @@ namespace rtcp
 				return packet_pointer;
 		}
 
+
+		*/
 		//template<typename rtcpPacket>
 		//bool setRtcpPacket(rtcpPacket inpacket) {
+		
+		bool setRtcpPacket(std::vector<uint8_t> inPacket) {
+			try {
+				int position = 0;
+				senderInfo* ptr;
+				reportBlock rb;
+				std::vector<char> v;
+				header = *(rtcpHeader*)inPacket.data();
+				position += sizeof(header);
+				if (!(validateHeader())) {
+					return false;
+				}
+				SSRC = *(uint32_t*)(inPacket.data() + position);
+				position += sizeof(SSRC);
+				switch (getPayload()) {
+				case SenderReport:
+					ptr = (senderInfo*)(inPacket.data() + position);
+					senderReport = *ptr;
+					break;
+				case ReceiverReport:
+					resetReportBlock();
+					for (int i = 0; i < getReportCount(); i++) {
+						rb = *(reportBlock*)(inPacket.data() + position);
+						position += sizeof(rb);
+						reports.push_back(rb);
+					}
+					break;
+				case SourceDescription:
+					resetSdesItems();
+					for (int i = 0; i < getReportCount(); i++) {
+						v.clear();
+						int t = inPacket[position];
+						position++;
+						int l = inPacket[position];
+						position++;				
+						v.insert(v.begin(), inPacket.begin() + position, inPacket.begin()+position+l);
+						position += l;
+						sdesItem si(t, v);
+						addSdesItem(si);
+					}
+					break;
+				case Goodbye:
+					resetLeavers();
+					for (int i = 0; i < getReportCount(); i++) {
+						uint32_t* ptr = (uint32_t*)(inPacket.data() + position);
+						otherLeavers.push_back(*ptr);
+						position += 4;
+					}
+					break;
+				case AppDef:
+					
+					break;
+				default:
+					return false;
+					break;
+				}
+				return true;
+			}
+			catch (std::exception& e) {
+				return false;
+				std::cerr << e.what() << std::endl;
+			}
+		}
+		/*
 		bool setRtcpPacket(uint8_t* inpacket) {
 			header = *(rtcpHeader*)inpacket;
 			inpacket += 4;
@@ -257,6 +395,8 @@ namespace rtcp
 
 			return true;
 		}
+		*/
+		
 		bool validateHeader();
 
 
@@ -275,7 +415,7 @@ namespace rtcp
 		std::vector<uint32_t> otherLeavers;
 		uint8_t goodbyeTextLength;
 		std::string goodbyeText;
-
+		
 	};
 
 

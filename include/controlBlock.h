@@ -5,6 +5,10 @@
 #include "rtcp.h"
 #include <unordered_map>
 
+
+#define BUFFER_SIZE 1024
+
+
 class controlBlock
 {
 public:
@@ -49,32 +53,105 @@ public:
 	uint8_t* createRtpPacket(uint8_t* data);
 	uint8_t* createRtcpPacket();
 
-
-	template<typename P>
-	bool sendRtpPacket(P packet, std::shared_ptr<boost::asio::ip::udp::socket> socket) 
-	{
+	
+	/*bool sendRtpData(std::vector<uint8_t> data, std::shared_ptr<boost::asio::ip::udp::socket> socket) {
 		try {
+			if (socketRtpMap[socket] == nullptr) {
+				if (!(createRtpVal(socket))) {
+					return false;
+				}
+			}
+			(*socketRtpMap[socket].get()).setPayload(data);
+			std::vector<uint8_t> prestart = *(*socketRtpMap[socket].get()).createRtpPacket();
+			//uint8_t* packet = (*socketRtpMap[socket]).createRtpPacket();
+			std::vector<uint8_t> buff;
+			std::copy(packet, packet + 34, buff.begin());
+			(*socket).send(boost::asio::buffer(buff));
+			//rtpPacketSentStats(*packet);
+			return true;
+		}
+		catch (std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			return false;
+		}
+	}
+	*/
+
+	bool receiveRtpData(std::shared_ptr <boost::asio::ip::udp::socket> socket) {
+		try {
+			if (socketRtpMap[socket] == nullptr) {
+				if (!(createRtpVal(socket))) {
+					std::cerr << "Could not create rtp receiver\n\n";
+					return false;
+				}
+			}
+			std::vector<uint8_t> v(BUFFER_SIZE);
+			int len = (*socket).receive(boost::asio::buffer(v));
+			std::vector<uint8_t> temp(v.begin(), v.begin() + len);
+			(*socketRtpMap[socket].get()).setRtpPacket(temp);
+			return true;
 
 		}
 		catch (std::exception& e)
 		{
-		
-
-
+			std::cerr << e.what() << std::endl;
+			return false;
 		}
 	}
 	
-	template<typename P>
-	bool sendRtpPacket(P packet, std::vector<std::shared_ptr<boost::asio::ip::udp::socket>> sockets);
+	
+	
+	template<typename D>
+	bool sendRtpData(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket) {
+		try {
+			if (socketRtpMap[socket] == nullptr) {
+				if (!(createRtpVal(socket))) {
+					std::cerr << "Could not create rtp receiver\n\n";
+					return false;
+				}
+			}
+			(*socketRtpMap[socket].get()).setPayload(data);
+			std::vector<uint8_t> v = *(*socketRtpMap[socket].get()).createRtpPacket();
+			(*socket).send(boost::asio::buffer(v));
+			return true;
+		}
+		catch (std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			return false;
+		}
+	}
+	
+	
+	
+	
+	template <typename R> 
+	bool sendRtcpPacket(std::shared_ptr<boost::asio::ip::udp::socket> socket) {
+		try {
+			if (socketRtcpMap[socket] == nullptr) {
+				if (!(createRtcpVal(socket))) {
+					std::cerr << "Could not create rtp receiver\n\n";
+					return false;
+				}
+			}
+			std::vector<uint8_t> v = *(*socketRtpMap[socket].get()).createRtpPacket();
+			(*socket).send(boost::asio::buffer(v));
+			return true;
+		}
+		catch (std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			return false;
+		}
+	}
 
-	bool sendRtcpPacket(uint8_t* packet, std::shared_ptr<boost::asio::ip::udp::socket> socket);
-	bool sendRtcpPacket(uint8_t* packet, std::vector<std::shared_ptr<boost::asio::ip::udp::socket>> sockets);
 
 	template <typename D>
 	bool sendRawData(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket) {
 		try {
 			(*socket).send(boost::asio::buffer(*data));
-
+			return true;
 		}
 		catch (std::exception& e)
 		{
@@ -94,15 +171,23 @@ public:
 			return -1;
 		}
 	}
-
+	
 	std::shared_ptr<boost::asio::ip::udp::socket> createOutputSocket(std::string ip, short port);
 	std::shared_ptr<boost::asio::ip::udp::socket> createInputSocket(short port);
 
+	bool createRtpVal(std::shared_ptr<boost::asio::ip::udp::socket> socket);
+	bool deleteRtpVal(std::shared_ptr<boost::asio::ip::udp::socket> socket);
+
+	bool createRtcpVal(std::shared_ptr<boost::asio::ip::udp::socket> socket);
+	bool deleteRtcpVal(std::shared_ptr<boost::asio::ip::udp::socket> socket);
+
+
 	std::shared_ptr<boost::asio::io_service> getService(){return io_service;}
 
+	std::unordered_map<std::shared_ptr<boost::asio::ip::udp::socket>, std::shared_ptr<rtp::Rtp>> socketRtpMap;
+	std::unordered_map<std::shared_ptr<boost::asio::ip::udp::socket>, std::shared_ptr<rtcp::Rtcp>> socketRtcpMap;
 
 private:
-	
 	struct sdesItems {
 		std::string cname ;
 		std::string name ;
@@ -134,9 +219,8 @@ private:
 		boost::asio::ip::udp::endpoint rtcpPort;
 
 		sdesItems items;
-
+		
 		bool leftConversation = false;
-
 	};
 
 
@@ -158,7 +242,7 @@ private:
 		bool initial;
 		bool precoded = true;
 		
-		uint32_t precodedFormat = 0;
+		int precodedFormat = 0;
 
 		bool padding;
 		bool headerExt;
@@ -173,14 +257,18 @@ private:
 	rtcp::Rtcp rtcpPacketer;
 
 	std::shared_ptr<boost::asio::io_service> io_service;
+
+
+
 	std::unordered_map<int, convMember> conversationMembers;
 	int outputIdCount;
 	int inputIdCount;
 	
 	uint32_t generateSSRC();
 	uint32_t generateRtpTimestamp();
-	uint32_t getNtpTimestamp();
+	uint32_t getNtpTimestampS();
+	uint32_t getNtpTimestampF();
 	uint32_t generateSeqNum();
 	uint32_t countJitter();
-	
+
 };

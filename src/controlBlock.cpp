@@ -1,8 +1,31 @@
 #include "controlBlock.h"
 
 /*
+todo note :
+
+
+
+
+
+
+
+!!!CHANGE DATA TYPE TO VECTORS!!!!!!!!!!!!!!! 
+fromRtcpleft only
+
+
+
+
+create generating rtp/rtcp methods;
+change way data is passed;
+
+
 working on:
 sending and receiving data from network(via rtp/rtcp);
+(sendRtpData
+receiveRtpData)
+
+
+
 
 not working at all yet (blank functions implemented)
 No jitter;
@@ -13,10 +36,12 @@ timestamp not working yet(both)
 
 
 //TODO!!!!!!!!
-controlBlock::controlBlock():
-		io_service(new boost::asio::io_service)
+controlBlock::controlBlock() :
+	io_service(new boost::asio::io_service)
+		
 
 {
+
 	//generateSSRC();
 	initializeOut();
 	//generateSeqNum();
@@ -54,43 +79,7 @@ void controlBlock::initializeOut() {
 
 }
 
-//TODO!!!!!!!!
-uint8_t* controlBlock::decodeRtpPacket(uint8_t * packet)
-{
-	rtpPacketer.setRtpPacket(packet);
-	if (rtpPacketer.getVersion() == 2) {
-		if (rtpPacketer.getPayloadType() < 128) {
-			if (conversationMembers[rtpPacketer.getSSRC()].highestSeqNum < rtpPacketer.getSeqNum()) 
-			{
-				conversationMembers[rtcpPacketer.getsHeaderSSRC()].packetsReceived++;
-				conversationMembers[rtcpPacketer.getsHeaderSSRC()].inputPacketLost += rtpPacketer.getSeqNum() - conversationMembers[rtcpPacketer.getsHeaderSSRC()].highestSeqNum - 1;
-				// add conversationMembers[rtcpPacketer.getsHeaderSSRC()].octetsReceived+= rtpPacketer
-			} else {
-				return nullptr;
-			}
-		}
-	}
-	return nullptr;
-}
-//todo!!!!!!!!
-void controlBlock::decodeRtcpPacket(uint8_t* packet)  //not scalable
-{
-	rtcpPacketer.setRtcpPacket(packet);
-	if (rtcpPacketer.getVersion() == 2) {
-		if (rtcpPacketer.getPayload() == 203)
-		{
-			conversationMembers[rtcpPacketer.getsHeaderSSRC()].leftConversation = true;
-		}
-		
-		if (rtcpPacketer.getPayload() > 190) 
-		{
 
-			conversationMembers[rtcpPacketer.getsHeaderSSRC()].packetsReceived++;
-			conversationMembers[rtcpPacketer.getsHeaderSSRC()].octetsReceived += rtcpPacketer.getHeaderLength();
-			//conversationMembers[rtcpPacketer.getsHeaderSSRC()].jitter = countJitter();		
-		}
-	}
-}
 
 
 std::shared_ptr<boost::asio::ip::udp::socket> controlBlock::createOutputSocket(std::string ip, short port)
@@ -123,4 +112,88 @@ std::shared_ptr<boost::asio::ip::udp::socket> controlBlock::createInputSocket(sh
 		std::cerr << e.what() << std::endl;
 		return nullptr;
 	}
+}
+
+bool controlBlock::createRtpVal(std::shared_ptr<boost::asio::ip::udp::socket> socket)
+{
+	try {
+		std::shared_ptr<rtp::Rtp> rtp = std::shared_ptr<rtp::Rtp>(new rtp::Rtp);
+		socketRtpMap[socket] = rtp;
+		return true;
+	} 
+	catch (std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return false;
+	}
+}
+
+bool controlBlock::deleteRtpVal(std::shared_ptr<boost::asio::ip::udp::socket> socket)
+{
+	try {
+		socketRtpMap.erase(socket);
+		return true;
+	}
+	catch (std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return false;
+	}
+}
+
+bool controlBlock::createRtcpVal(std::shared_ptr<boost::asio::ip::udp::socket> socket)
+{
+	try {
+		std::shared_ptr<rtcp::Rtcp> rtcp;
+		socketRtcpMap[socket] = rtcp;
+		return true;
+	}
+	catch (std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return false;
+	}
+}
+
+bool controlBlock::deleteRtcpVal(std::shared_ptr<boost::asio::ip::udp::socket> socket)
+{
+	try {
+		socketRtcpMap.erase(socket);
+		return true;
+	}
+	catch (std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return false;
+	}
+}
+
+uint32_t controlBlock::generateSSRC()
+{
+	uint32_t randomSSRC = 1;
+	return 
+}
+
+uint32_t controlBlock::generateRtpTimestamp()
+{
+	uint32_t rtpTime = 100;
+	return rtpTime;
+}
+
+uint32_t controlBlock::getNtpTimestampS()
+{
+	uint32_t ntpS = 100;
+	return 100;
+}
+
+uint32_t controlBlock::getNtpTimestampF()
+{
+	uint32_t ntpF = 5;
+	return ntpF;
+}
+
+uint32_t controlBlock::generateSeqNum()
+{
+	uint32_t seqNum = 0;
+	return seqNum;
 }

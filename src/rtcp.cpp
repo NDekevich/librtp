@@ -177,7 +177,8 @@ rtcp::Rtcp::sdesItem::sdesItem(int sdesType, std::string data)
 {
 	rtpSdesType = sdesType;
 	itemLength = data.size();
-	std::vector<char>item(data.begin(),data.end());
+	item.insert(item.begin(), data.begin(), data.end());
+
 }
 
 
@@ -185,5 +186,5 @@ rtcp::Rtcp::sdesItem::sdesItem(int sdesType, std::vector<char> data)
 {
 	rtpSdesType = sdesType;
 	itemLength = data.size();
-	std::vector<char>item(data);
+	item.insert(item.begin(), data.begin(), data.end());
 }

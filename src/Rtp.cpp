@@ -19,7 +19,7 @@ Rtp::Rtp() {
 }
 
 //template <typename rtpIO>
-Rtp::Rtp(uint8_t* input)
+Rtp::Rtp(std::vector<uint8_t> input)
 {
 	setRtpPacket(input);
 }
@@ -33,7 +33,6 @@ Rtp::Rtp(uint8_t* input)
 	packet.firstOctet = (packet.firstOctet & 0x3F) + (version << 6); //0b00111111 
 }
  
-
 int Rtp::getVersion() const
 {
 	return (packet.firstOctet&0xC0)>>6;  //0b11000000
@@ -150,13 +149,13 @@ void Rtp::setSizeofPayload(uint32_t size)
 	sizeofPayload = size;
 }
 
-void Rtp::setPayload(uint8_t * data)
+void Rtp::setPayload(std::vector<uint8_t> data)
 {
 	payload = data;
 }
 
 
-void Rtp::setHeaderExtension(uint8_t* ext)
+void Rtp::setHeaderExtension(std::vector<uint8_t> ext)
 {
 	headerExtension = ext;
 }
@@ -175,64 +174,76 @@ void Rtp::setHeaderExtension(uint8_t* ext)
 //
 
 
-std::shared_ptr<uint8_t> Rtp::createRtpPacket() const
+std::shared_ptr<std::vector<uint8_t>> Rtp::createRtpPacket() const
 {
-	int length;
-	length = MIN_HEADER_LENGTH + sizeof(CSRC.data())*CSRC.size() + sizeofPayload * sizeof(payload);
-	length += getExtension() ? (EXTENTION_HEADER_PROFILE_LENGTH + extensionLength * sizeof(headerExtension)):0;
-	//length += getPadding() ?() : ; //add  padding	
-	std::shared_ptr<uint8_t> packetPointer(new uint8_t[length]); // does not work;
+	std::shared_ptr<std::vector<uint8_t>> outPacket(new std::vector<uint8_t>);
+	try {
+		uint8_t* ptr = (uint8_t*)&packet;
+		(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(packet));
+		ptr = (uint8_t*)CSRC.data();
+		for (int i = 0; i < CSRC.size()*4; i++) {
+			(*outPacket).push_back(*ptr);
+			ptr++;
+		}
 			
-	uint8_t* memloc = packetPointer.get();
-	memcpy(memloc, &packet, MIN_HEADER_LENGTH);
-	memloc += MIN_HEADER_LENGTH; 
-	memcpy(memloc, CSRC.data(), CSRC.size() * sizeof(uint32_t));
-	memloc += CSRC.size() * sizeof(uint32_t);
-	if (getExtension()) {
-		memcpy(memloc, &extensionNum, sizeof(extensionNum));
-		memloc += sizeof(extensionNum);
-		memcpy(memloc, &extensionLength, sizeof(extensionLength));
-		memloc += sizeof(extensionLength);
-		memcpy(memloc, headerExtension, extensionLength * sizeof(headerExtension));
-		memloc += extensionLength * sizeof(headerExtension);
+		if (getExtension()) {
+			ptr = (uint8_t*)&extensionNum;
+			(*outPacket).insert((*outPacket).end(), ptr, ptr + 2);
+			ptr = (uint8_t*)&extensionLength;
+			(*outPacket).insert((*outPacket).end(), ptr, ptr + 2);
+			(*outPacket).insert((*outPacket).end(), headerExtension.begin(), headerExtension.end());
+		}
+		
+		(*outPacket).insert((*outPacket).end(), payload.begin(), payload.end());
+		int length = (*outPacket).size();
+		
+		if ((getPadding()) && (length % 4 != 0)) {
+			uint8_t i = 0;
+			for (i = 0; i < (3 - length % 4); i++) {
+				(*outPacket).push_back(0);
+			}
+			(*outPacket).push_back(i + 1);
+		}
 	}
-	memcpy(memloc, payload, sizeofPayload * sizeof(payload));
-	memloc += sizeofPayload * sizeof(payload);
-
-
-
-	return packetPointer;
+	catch (std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+	}
+	return outPacket;
 }
 
 
-
-
-
-
-template <typename rtpIO>
-void Rtp::setRtpPacket(rtpIO input)
+void Rtp::setRtpPacket(std::vector<uint8_t> input)
 {
-	uint8_t* inpacket = input;
-	//add validation
-	packet = *(rtpPacket*)inpacket;
-	inpacket += MIN_HEADER_LENGTH;
+	int position = 0;
+	packet = *(rtpPacket*)input.data();
+	position += MIN_HEADER_LENGTH;
 	int cc = getCSRCcount();
+	CSRC.clear();
+	uint32_t* ptr;
 	for (int i = 0; i < cc; i++) {
-		uint32_t temp = *(uint32_t*)inpacket;
-		inpacket += 4;
-		CSRC.push_back(temp);
+		ptr = (uint32_t*)(input.data() + position);
+		CSRC.push_back(*ptr);
+		position+=4;
 	}
 	if (getExtension()) {
-		extensionNum = *(uint16_t*)inpacket;
-		inpacket += 2;
-		extensionLength = *(uint16_t*)inpacket;
-		inpacket += 2;
-		headerExtension = (uint8_t*)malloc(extensionLength * sizeof(uint32_t));
-		memcpy((headerExtension), inpacket, extensionLength * sizeof(uint32_t));
-		inpacket += extensionLength * 4;
+		extensionNum = *(uint16_t*)(input.data()+position);
+		position += 2;
+		extensionLength = *(uint16_t*)(input.data()+position);
+		position += 2;
+		headerExtension.clear();
+		headerExtension.insert(headerExtension.begin(), (input.begin() + position), (input.begin() + position + extensionLength));
+		position += extensionLength;
 	}
-	payload = (uint8_t*)malloc(sizeofPayload * sizeof(payload));
-											 
-	memcpy(payload, inpacket, sizeofPayload * sizeof(payload));
-
+	payload.clear();
+	if(getPadding()){
+		int paddingSize = *(input.end() - 1);
+		if ((input.begin() + position) > (input.end() - paddingSize)) {
+			payload.insert(payload.begin(), input.begin() + position, input.end() - paddingSize);
+		}
+	}
+	else
+	{
+		payload.insert(payload.begin(), input.begin() + position, input.end());
+	}
 }

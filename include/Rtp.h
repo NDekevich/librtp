@@ -16,7 +16,7 @@ namespace rtp
 	public: 
 		Rtp();
 		//template<typename rtpIO>
-		Rtp(uint8_t* inpacket);
+		Rtp(std::vector<uint8_t> inpacket);
 
 	
 
@@ -110,16 +110,15 @@ namespace rtp
 		uint32_t getSizeofPayload() { return sizeofPayload; }
 
 
-		void setPayload(uint8_t* data);
-		uint8_t* getPayload() { return payload; }
+		void setPayload(std::vector<uint8_t > data);
+		std::vector<uint8_t>* getPayload() { return &payload; }
 
-		uint8_t* getHeaderExtension() { return headerExtension; }
-		void setHeaderExtension(uint8_t* ext);
+		std::vector<uint8_t>* getHeaderExtension() { return &headerExtension; }
+		void setHeaderExtension(std::vector<uint8_t> ext);
 
-
-		std::shared_ptr<uint8_t> createRtpPacket() const;
-		template <typename rtpIO>
-		void setRtpPacket(rtpIO input);
+		std::shared_ptr<std::vector<uint8_t>> createRtpPacket() const;
+	
+		void setRtpPacket(std::vector<uint8_t>);
 			
 
 	
@@ -132,9 +131,10 @@ namespace rtp
 		std::vector<uint32_t> CSRC;
 		uint16_t extensionNum;
 		uint16_t extensionLength;
-		uint8_t* headerExtension;
+		std::vector<uint8_t> headerExtension;
 		uint32_t sizeofPayload = 1;
-		uint8_t* payload;
+		
+		std::vector<uint8_t> payload;
 	};
 
 
