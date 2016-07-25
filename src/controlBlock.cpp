@@ -9,9 +9,8 @@ Change sdesItems rtcp + senderReport (possibly);
 
 
 not working at all yet (blank functions implemented)
-No jitter;
 octet/packet count unrelaible;
-generateSSRC not workign yet=)
+generateSSRC not workign yet
 timestamp not working yet(both)
 */
 
@@ -25,8 +24,6 @@ controlBlock::controlBlock() :
 	initializeOut();
 	generateSeqNum();
 	generateRtpTimestampOffset();
-	
-
 }
 
 

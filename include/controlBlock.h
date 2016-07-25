@@ -4,7 +4,7 @@
 #include "RTP.h"
 #include "rtcp.h"
 #include <unordered_map>
-
+#include <queue>
 
 #define BUFFER_SIZE 1024
 #define PACKETS_TO_IGNORE 5
@@ -50,7 +50,7 @@ public:
 			rtp::Rtp* packet = socketRtpMap[socket].get();
 			(*socketRtpMap[socket].get()).setRtpPacket(temp);
 			convMember* convM = &(conversationMembers[((*socketRtpMap[socket].get()).getSSRC())]);
-			if ((*convM).packetsReceived<PACKETS_TO_IGNORE) {
+			if ((*convM).packetsReceived < PACKETS_TO_IGNORE) {
 				(*convM).packetsReceived++;
 			}
 			else
@@ -58,10 +58,10 @@ public:
 				if ((*convM).highestSeqNum < (*packet).getSeqNum()) {
 					(*convM).packetsReceived++;
 					(*convM).octetsReceived += len;
-			//		int D = ((*packet).getTimestamp() - (*convM).lastRtpTimestamp) - (currentRtpTime() - (*convM).lastRtpTimestampArrival);
-				//	(*convM).jitter = (*convM).jitter + (std::abs(D) - (*convM).jitter) / 16;
+					//		int D = ((*packet).getTimestamp() - (*convM).lastRtpTimestamp) - (currentRtpTime() - (*convM).lastRtpTimestampArrival);
+						//	(*convM).jitter = (*convM).jitter + (std::abs(D) - (*convM).jitter) / 16;
 					(*convM).lastRtpTimestamp = (*packet).getTimestamp();
-				//	(*convM).lastRtpTimestampArrival = currentRtpTime();
+					//	(*convM).lastRtpTimestampArrival = currentRtpTime();
 					(*convM).packetLost += ((*packet).getSeqNum() - (*convM).highestSeqNum - 1);
 				}
 			}
@@ -73,7 +73,7 @@ public:
 			return false;
 		}
 	}
-	
+
 	template<typename D>
 	bool sendRtpData(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket) {
 		try {
@@ -83,7 +83,17 @@ public:
 					return false;
 				}
 			}
-			(*socketRtpMap[socket].get()).setPayload(data);
+			if (outInfo.precoded)
+			{
+				(*socketRtpMap[socket].get()).setPayloadType((rtp::Rtp::rtpPayloadTypes)outInfo.precodedFormat);
+				(*socketRtpMap[socket].get()).setPayload(data);
+			}
+			else
+			{
+				(*socketRtpMap[socket].get()).setPayload(data);
+				// ADD CODE FOR CODING DATA;
+				//
+			}
 			//(*socketRtpMap[socket].get()).setTimestamp(currentRtpTime());
 			std::vector<uint8_t> v = *(*socketRtpMap[socket].get()).createRtpPacket();
 			(*socket).send(boost::asio::buffer(v));
@@ -99,7 +109,7 @@ public:
 			return false;
 		}
 	}
-		
+
 
 	bool sendRtcpPacket(std::shared_ptr<boost::asio::ip::udp::socket> socket) {
 		try {
@@ -107,20 +117,11 @@ public:
 				if (!(createRtcpVal(socket))) {
 					std::cerr << "Could not create rtp receiver\n\n";
 					return false;
-				}  
+				}
 			}
 
 
 
-
-
-
-
-
-
-
-
-				
 			std::vector<uint8_t> v = *(*socketRtcpMap[socket].get()).createRtcpPacket();
 			(*socket).send(boost::asio::buffer(v));
 			return true;
@@ -133,7 +134,7 @@ public:
 	}
 
 	bool receiveRtcpData(std::shared_ptr<boost::asio::ip::udp::socket> socket) {
-		try 
+		try
 		{
 			if (socketRtcpMap[socket] == nullptr) {
 				if (!(createRtcpVal(socket))) {
@@ -153,6 +154,9 @@ public:
 			}
 			else
 			{
+				if ((*convM).packetsReceived == PACKETS_TO_IGNORE){
+					outInfo.members++;
+				}
 				(*convM).packetsReceived++;
 				(*convM).octetsReceived += len;
 				int type;
@@ -210,33 +214,6 @@ public:
 		}
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	template <typename D>
 	bool sendRawData(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket) {
 		try {
@@ -278,6 +255,7 @@ public:
 	std::unordered_map<std::shared_ptr<boost::asio::ip::udp::socket>, std::shared_ptr<rtp::Rtp>> socketRtpMap;
 	std::unordered_map<std::shared_ptr<boost::asio::ip::udp::socket>, std::shared_ptr<rtcp::Rtcp>> socketRtcpMap;
 
+
 private:
 	int rtpOffset;
 	
@@ -309,6 +287,7 @@ private:
 		uint32_t fractionLostBySource;
 		uint32_t delaySlsrBySource;
 
+		std::queue<int> itemsToSend;
 
 		boost::asio::ip::udp::endpoint rtpPort;
 		boost::asio::ip::udp::endpoint rtcpPort;
