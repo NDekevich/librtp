@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 
 set(PROJECT_NAME Ipf.proto)
 project(${PROJECT_NAME})
@@ -8,21 +8,29 @@ set(GLOBAL PROPERTY USE_FOLDERS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_LIBS ON)
 
-find_package(Boost 1.58.0 REQUIRED)
-    
- set(SRC_FILES
+find_package(Threads REQUIRED)
+find_package(Boost 1.58.0 REQUIRED
+    COMPONENTS system date_time regex)
+
+set(SRC_FILES
     src/rtp.cpp
     src/rtcp.cpp
     src/controlBlock.cpp
     )
-    
+
 set(HDR_FILES
     include/controlBlock.h
     include/rtp.h
-    include/rtcp.h 
+    include/rtcp.h
     )
-    
+
 add_library(${PROJECT_NAME} STATIC ${SRC_FILES} ${HDR_FILES})
-    target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR} include)
-    
-    
+target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR} include)
+
+include(CTest)
+if(BUILD_TESTING)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/ext/gtest)
+    add_subdirectory(test)
+endif()
+
+
