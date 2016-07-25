@@ -127,82 +127,6 @@ TEST(RtpTest, packetFormation) {
 		uint8_t* start = start2.data();
 
 
-
-		/*
-
-		ASSERT_EQ(*start, 146) << "vvpxcc";
-		std::cout << (int)(*start) << std::endl;
-		start++;
-		ASSERT_EQ(*start, 128) << "mpl";
-		std::cout << (int)(*start) << std::endl;
-		start++;
-		ASSERT_EQ(*start, 42) << "seqnum1";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "seqnum2";
-		std::cout << (int)(*start) << std::endl;
-		start++;
-		ASSERT_EQ(*start, 8) << "ts1";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "ts2";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "ts3";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "ts4";
-		std::cout << (int)(*start) << std::endl;
-		start++;
-		ASSERT_EQ(*start, 1) << "ssrc1";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "ssrc2";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "ssrc3";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "ssrc4";
-		std::cout << (int)(*start) << std::endl;
-		start++;
-		ASSERT_EQ(*start, 1) << "csrc11";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "csrc12";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "csrc13";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "csrc14";
-		std::cout << (int)(*start) << std::endl;
-		start++;
-		ASSERT_EQ(*start, 2) << "csrc21";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "csrc22";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "csrc23";
-		std::cout << (int)(*start);// << std::endl;
-		start++;
-		ASSERT_EQ(*start, 0) << "csrc24";
-		std::cout << (int)(*start) << std::endl;
-		start++;
-		ASSERT_EQ(*start, 3);
-		start++;
-		ASSERT_EQ(*start, 0);
-		start++;
-		ASSERT_EQ(*start, 2);
-		start++;
-		ASSERT_EQ(*start, 0);
-		start++;
-
-		start += 2;
-		start += 4;
-		//(*start, 'a') << "payload";
-		*/
 		Rtp secondPacket(start2);
 
 
@@ -265,75 +189,39 @@ TEST(RtcpTest, senderReportFormation) {
 	rtcpPacket1.senderReport.octetCount = 31;
 	rtcpPacket1.senderReport.packetCount = 4;
 
+	rtcp::Rtcp::reportBlock rb;
+	rb.delaySinceLSR = 100;
+	rb.fractionLost = 0;
+	rb.highestSeqNum = 10;
+	rb.interarrivalJitter = 1000;
+	rb.lastSR = 10000;
+	rb.packetsLost = 100000;
+	rb.ssrc = 1000000;
+	rtcpPacket1.addReportBlock(rb);
+	rtcp::Rtcp::reportBlock rb1;
+	rb1.delaySinceLSR = 101;
+	rb1.fractionLost = 1;
+	rb1.highestSeqNum = 11;
+	rb1.interarrivalJitter = 1001;
+	rb1.lastSR = 10001;
+	rb1.packetsLost = 100001;
+	rb1.ssrc = 1000001;
+	rtcpPacket1.addReportBlock(rb1);
+	rtcp::Rtcp::reportBlock rb2;
+	rb2.delaySinceLSR = 102;
+	rb2.fractionLost = 2;
+	rb2.highestSeqNum = 12;
+	rb2.interarrivalJitter = 1002;
+	rb2.lastSR = 10002;
+	rb2.packetsLost = 100002;
+	rb2.ssrc = 1000002;
+	rtcpPacket1.addReportBlock(rb2);
 
 	Rtcp rtcpPacket2;
 	std::shared_ptr<std::vector<uint8_t>> prestart = rtcpPacket1.createRtcpPacket();
 	std::vector<uint8_t> start2 = *prestart;
 	uint8_t* start = start2.data();
 	rtcpPacket2.setRtcpPacket(start2);
-
-	/*
-	ASSERT_EQ(*start, 0b10000000) << "vvpxcc";
-	std::cout << (int)(*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 200) << "pt";
-	std::cout << (int)(*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 6) << "length1";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "length2";
-	std::cout << (int)(*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 1) << "ssrc1";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "ssrc2";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "ssrc3";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "ssrc4";
-	std::cout << (int)(*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 2) << "ntp1";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "ntp2";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "ntp3";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "ntp4";
-	std::cout << (int)(*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 1) << "sntp1";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "sntp2";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "sntp13";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "sntp14";
-	std::cout << (int)(*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 3) << "rtp1";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "rtp2";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "rtp3";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "rtp4";
-	std::cout << (int)(*start) << std::endl;
-	start++;
-	*/
 
 	ASSERT_EQ(rtcpPacket1.getVersion(), rtcpPacket2.getVersion());
 	ASSERT_EQ(rtcpPacket1.getPayload(), rtcpPacket2.getPayload());
@@ -346,6 +234,19 @@ TEST(RtcpTest, senderReportFormation) {
 	ASSERT_EQ(rtcpPacket1.senderReport.octetCount, rtcpPacket2.senderReport.octetCount);
 	ASSERT_EQ(rtcpPacket1.senderReport.ntpFractionTimestamp, rtcpPacket2.senderReport.ntpFractionTimestamp);
 	ASSERT_EQ(rtcpPacket1.senderReport.packetCount, rtcpPacket2.senderReport.packetCount);
+
+	std::vector <rtcp::Rtcp::reportBlock> blocks1 = rtcpPacket1.getReportBlocks();
+	std::vector <rtcp::Rtcp::reportBlock> blocks2 = rtcpPacket1.getReportBlocks();
+	ASSERT_EQ(blocks1.size(), blocks2.size());
+	for (int i = 0; i < blocks1.size(); i++) {
+		ASSERT_EQ(blocks1[i].delaySinceLSR, blocks2[i].delaySinceLSR);
+		ASSERT_EQ(blocks1[i].fractionLost, blocks2[i].fractionLost);
+		ASSERT_EQ(blocks1[i].highestSeqNum, blocks2[i].highestSeqNum);
+		ASSERT_EQ(blocks1[i].interarrivalJitter, blocks2[i].interarrivalJitter);
+		ASSERT_EQ(blocks1[i].lastSR, blocks2[i].lastSR);
+		ASSERT_EQ(blocks1[i].packetsLost, blocks2[i].packetsLost);
+		ASSERT_EQ(blocks1[i].ssrc, blocks2[i].ssrc);
+	}
 
 }
 
@@ -391,15 +292,6 @@ TEST(RtcpTest, recieverReportFormation) {
 	std::vector<uint8_t> start2 = *prestart;
 	uint8_t* start = start2.data();
 	rtcpPacket2.setRtcpPacket(start2);
-
-
-
-
-
-
-
-
-
 
 	ASSERT_EQ(rtcpPacket1.getVersion(), rtcpPacket2.getVersion());
 	ASSERT_EQ(rtcpPacket1.getPayload(), rtcpPacket2.getPayload());
@@ -452,184 +344,7 @@ TEST(RtcpTest, sourceDescriptionFormation) {
 	rtcpPacket2.setRtcpPacket(start2);
 
 	uint8_t* start = start2.data();
-/*
-	ASSERT_EQ(*start, 0b10000000+6) << "vvpxcc";
-	std::cout << (int)(*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 202) << "pt";
-	std::cout << (int)(*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 17) << "length1";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "length2";
-	std::cout << (int)(*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 1) << "ssrc1";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "ssrc2";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "ssrc3";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 0) << "ssrc4";
-	std::cout << (int)(*start) << std::endl;
-	start++;
 
-
-	ASSERT_EQ(*start, 1) << "type";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 10) << "iL";
-	std::cout << (int)(*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'c') << "data1";
-	std::cout << (*start) << " ";// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'n') << "data1";
-	std::cout << (*start) << " ";// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'a') << "data1";
-	std::cout << (*start) << " ";// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'm') << "data1";
-	std::cout << (*start) << " ";// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'e') << "data1";
-	std::cout << (*start) << " ";// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'c') << "data1";
-	std::cout << (*start) << " ";// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'n') << "data1";
-	std::cout << (*start) << " ";// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'a') << "data1";
-	std::cout << (*start) << " ";// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'm') << "data1";
-	std::cout << (*start) << " ";// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'e') << "data1";
-	std::cout << (*start) << " "<< std::endl;
-	start++;
-
-	ASSERT_EQ(*start, 2) << "type";
-	std::cout << (*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 10) << "iL";
-	std::cout << (*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'N') << "data1";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'i') << "data1";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'k') << "data1";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'i') << "data1";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 't') << "data1";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'a') << "data1";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, '1') << "data1";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, '2') << "data1";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, '3') << "data1";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, '4') << "data1";
-	std::cout << (*start) << std::endl;
-	start++;
-
-	//ASSERT_TRUE(false);
-	ASSERT_EQ(*start, 3) << "type";
-	std::cout << (*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 10) << "iL";
-	std::cout << (*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'e') << "data2";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'h') << "data2";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'e') << "data2";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, '@') << "data2";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'g') << "data2";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'o') << "data2";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'o') << "data2";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'g') << "data2";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'l') << "data2";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 'e') << "data2";
-	std::cout << (*start) << std::endl;
-	start++;
-
-	ASSERT_EQ(*start, 4) << "type";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, 10) << "iL";
-	std::cout << (int)(*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, '0') << "data";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, '1') << "data";
-	std::cout << (*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, '2') << "data";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, '3') << "data";
-	std::cout << (*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, '4') << "data";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, '5') << "data";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, '6') << "data";
-	std::cout << (*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, '7') << "data";
-	std::cout << (*start);// << std::endl;
-	start++;
-	ASSERT_EQ(*start, '8') << "data";
-	std::cout << (*start) << std::endl;
-	start++;
-	ASSERT_EQ(*start, '9') << "data";
-	std::cout << (*start);// << std::endl;
-	start++;
-	*/
-	
-	
 	
 	ASSERT_EQ(rtcpPacket1.getVersion(), rtcpPacket2.getVersion());
 	ASSERT_EQ(rtcpPacket1.getPayload(), rtcpPacket2.getPayload());
@@ -680,7 +395,7 @@ TEST(RtcpTest, goodbyeFormation) {
 
 //control block;
 
-TEST(control_block, outSocket) {
+TEST(control_block, rtpPacket) {
 	controlBlock cBlock;
 	std::string ip = "127.0.0.1";
 	short port = 30000;
@@ -689,7 +404,7 @@ TEST(control_block, outSocket) {
 
 
 	std::shared_ptr<boost::asio::ip::udp::socket> inS = cBlock.createInputSocket(port);
-	cBlock.createRtpVal(inS);
+	//cBlock.createRtpVal(inS);
 
 	(*cBlock.socketRtpMap[outS]).setMarker(true);
 	(*cBlock.socketRtpMap[outS]).setExtension(true);
@@ -715,13 +430,18 @@ TEST(control_block, outSocket) {
 	cBlock.sendRtpData(dataP, outS);
 	//cBlock.sendRawData(&outArray, outS);
 
+	(*cBlock.socketRtpMap[outS]).setMarker(false);
+	cBlock.sendRtpData(dataP, outS);
+
+
 	std::vector<uint8_t> inArray;
 	inArray.resize(2048);
-	boost::asio::ip::udp::endpoint ep(boost::asio::ip::address::from_string(ip), port);
+	//boost::asio::ip::udp::endpoint ep(boost::asio::ip::address::from_string(ip), port);
 
 	cBlock.receiveRtpData(inS);
-	rtp:Rtp secondPacket(*cBlock.socketRtpMap[inS]);
+	rtp::Rtp secondPacket(*cBlock.socketRtpMap[inS]);
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getVersion(), secondPacket.getVersion()) << "version";
+	//ASSERT_EQ((*cBlock.socketRtpMap[outS]).getMarker(), secondPacket.getMarker()) << "version";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRCcount(), secondPacket.getCSRCcount()) << "Count";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRC()[0], secondPacket.getCSRC()[0]) << "CSRC_0";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRC()[1], secondPacket.getCSRC()[1]) << "CSRC_1";
@@ -731,42 +451,84 @@ TEST(control_block, outSocket) {
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getSSRC(), secondPacket.getSSRC()) << "SSRC";
 	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getHeaderExtension(), *secondPacket.getHeaderExtension()) << "Header Extension";
 	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getPayload(), *secondPacket.getPayload()) << "payload";
+	
+	cBlock.receiveRtpData(inS);
+	rtp::Rtp thirdPacket(*cBlock.socketRtpMap[inS]);
+	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getVersion(), thirdPacket.getVersion()) << "version";
+	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getMarker(), thirdPacket.getMarker()) << "version";
+	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRCcount(), thirdPacket.getCSRCcount()) << "Count";
+	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRC()[0], thirdPacket.getCSRC()[0]) << "CSRC_0";
+	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRC()[1], thirdPacket.getCSRC()[1]) << "CSRC_1";
+	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getSeqNum(), thirdPacket.getSeqNum()) << "SeqNum";
+	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getPayloadType(), thirdPacket.getPayloadType()) << "type";
+	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getTimestamp(), thirdPacket.getTimestamp()) << "Timestamp";
+	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getSSRC(), thirdPacket.getSSRC()) << "SSRC";
+	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getHeaderExtension(), *thirdPacket.getHeaderExtension()) << "Header Extension";
+	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getPayload(), *thirdPacket.getPayload()) << "payload";
 
-
-	/*
-	int len = cBlock.receiveRawData(&inArray, inS);
-	if (len > 0) {
-		for (int i = 0; i < len; i++) {
-			//ASSERT_EQ(outArray[i], inArray[i]);
-			//std::cout << "wtf\n";
-		}
-		Rtp secondPacket;
-		v.clear();
-		v.insert(v.begin(), inArray.begin(), inArray.begin() + len);
-		secondPacket.setRtpPacket(v);
-
-		ASSERT_EQ((*cBlock.socketRtpMap[outS]).getVersion(),	 secondPacket.getVersion()) << "version";
-		ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRCcount(), secondPacket.getCSRCcount()) << "Count";
-		ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRC()[0], secondPacket.getCSRC()[0]) << "CSRC_0";
-		ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRC()[1], secondPacket.getCSRC()[1]) << "CSRC_1";
-		ASSERT_EQ((*cBlock.socketRtpMap[outS]).getSeqNum(), secondPacket.getSeqNum()) << "SeqNum";
-		ASSERT_EQ((*cBlock.socketRtpMap[outS]).getPayloadType(), secondPacket.getPayloadType()) << "type";
-		ASSERT_EQ((*cBlock.socketRtpMap[outS]).getTimestamp(), secondPacket.getTimestamp()) << "Timestamp";
-		ASSERT_EQ((*cBlock.socketRtpMap[outS]).getSSRC(), secondPacket.getSSRC()) << "SSRC";
-		ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getHeaderExtension(), *secondPacket.getHeaderExtension()) << "Header Extension";
-		ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getPayload(), *secondPacket.getPayload()) << "payload";
-			
-	}
-	*/
-
-		
 }
 
+TEST(control_block, rtcpPacket) {
+	controlBlock cBlock;
+	std::string ip = "127.0.0.1";
+	short port = 30001;
+
+	std::shared_ptr<boost::asio::ip::udp::socket> outS = cBlock.createOutputSocket(ip, port);
+	cBlock.createRtcpVal(outS);
+
+	std::shared_ptr<boost::asio::ip::udp::socket> inS = cBlock.createInputSocket(port);
+	cBlock.createRtcpVal(inS);
+
+	(*cBlock.socketRtcpMap[outS]).setVersion(2);//0b10000000
+	(*cBlock.socketRtcpMap[outS]).setPayload((*cBlock.socketRtcpMap[outS]).SenderReport);
+	(*cBlock.socketRtcpMap[outS]).setHeaderSSRC(1);
+	(*cBlock.socketRtcpMap[outS]).setReportCount(0);
+	(*cBlock.socketRtcpMap[outS]).setHeaderLength(6);
+	(*cBlock.socketRtcpMap[outS]).senderReport.rtpTimestamp = 3;
+	(*cBlock.socketRtcpMap[outS]).senderReport.ntpFractionTimestamp = 1;
+	(*cBlock.socketRtcpMap[outS]).senderReport.ntpSecondsTimestamp = 2;
+	(*cBlock.socketRtcpMap[outS]).senderReport.octetCount = 31;
+	(*cBlock.socketRtcpMap[outS]).senderReport.packetCount = 4;
 
 
+	cBlock.sendRtcpPacket(outS);
 
+	std::vector<uint8_t> inArray;
+	inArray.resize(2048);
+	std::vector<uint8_t> v;
 
+	int rawLen = 0;
+//	rawLen = cBlock.receiveRawData(&inArray, inS);
 
+	int rtcpLen = 0;
+	rtcpLen = cBlock.receiveRtcpData(inS);
+	
+	if (rtcpLen > 0) {
+		rtcp:Rtcp secondPacket(*cBlock.socketRtcpMap[inS]);	
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).getVersion(), secondPacket.getVersion());
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).getPayload(), secondPacket.getPayload());
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.ntpFractionTimestamp, secondPacket.senderReport.ntpFractionTimestamp);
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.ntpSecondsTimestamp, secondPacket.senderReport.ntpSecondsTimestamp);
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.octetCount, secondPacket.senderReport.octetCount);
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.packetCount, secondPacket.senderReport.packetCount);
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.rtpTimestamp, secondPacket.senderReport.rtpTimestamp);
+	}
+
+	if (rawLen > 0) {
+		Rtcp secondPacket;
+		v.clear();
+		v.insert(v.begin(), inArray.begin(), inArray.begin() + rawLen);
+		secondPacket.setRtcpPacket(v);
+
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).getVersion(), secondPacket.getVersion());
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).getPayload(), secondPacket.getPayload());
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.ntpFractionTimestamp, secondPacket.senderReport.ntpFractionTimestamp);
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.ntpSecondsTimestamp, secondPacket.senderReport.ntpSecondsTimestamp);
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.octetCount, secondPacket.senderReport.octetCount);
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.packetCount, secondPacket.senderReport.packetCount);
+		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.rtpTimestamp, secondPacket.senderReport.rtpTimestamp);
+	}
+}
 
 
 
