@@ -123,13 +123,15 @@ namespace rtcp
 				std::shared_ptr<std::vector<uint8_t>> outPacket(new std::vector <uint8_t>);
 				uint8_t* ptr;
 				ptr = (uint8_t*)(&header);
+
 				(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(header));
 				ptr = (uint8_t*)(&SSRC);
 				(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(SSRC));
 
 				switch (getPayload())
 				{
-				case SenderReport:ptr = (uint8_t*)(&senderReport);
+				case SenderReport:
+					ptr = (uint8_t*)(&senderReport);
 					(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(senderReport));
 				case ReceiverReport:
 					setReportCount(reportCount);
@@ -174,6 +176,7 @@ namespace rtcp
 				return outPacket;
 			}
 			catch (std::exception& e) {
+				std::cout << "ERROR: creating RTCP" << std::endl;
 				std::cerr << e.what() << std::endl;
 			}
 		}
@@ -188,21 +191,24 @@ namespace rtcp
 				header = *(rtcpHeader*)inPacket.data();
 				position += sizeof(header);
 				if (!(validateHeader())) {
+
 					return false;
 				}
 				SSRC = *(uint32_t*)(inPacket.data() + position);
+
 				position += sizeof(SSRC);
 				switch (getPayload()) {
 				case SenderReport:
 					ptr = (senderInfo*)(inPacket.data() + position);
 					senderReport = *ptr;
 					position += sizeof(senderReport);
+
 				case ReceiverReport:
 					resetReportBlock();
 					for (int i = 0; i < getReportCount(); i++) {
 						rb = *(reportBlock*)(inPacket.data() + position);
 						position += sizeof(rb);
-						reports.push_back(rb);
+						addReportBlock(rb);
 					}
 					break;
 				case SourceDescription:
@@ -228,7 +234,6 @@ namespace rtcp
 					}
 					break;
 				case AppDef:
-					
 					break;
 				default:
 					return false;
@@ -237,10 +242,13 @@ namespace rtcp
 				return true;
 			}
 			catch (std::exception& e) {
-				return false;
+				std::cout << "ERROR: setting RTCP" << std::endl;
 				std::cerr << e.what() << std::endl;
+				return false;
 			}
 		}
+
+
 		bool validateHeader();
 
 
@@ -250,9 +258,9 @@ namespace rtcp
 		std::vector<sdesItem> items;
 		uint32_t SSRC;
 		senderInfo senderReport;
-		int sdesCount;
-		int reportCount;
-		int leaverCount;
+		int sdesCount = 0;
+		int reportCount = 0;
+		int leaverCount = 0;
 
 
 		bool optGoodbyeText;

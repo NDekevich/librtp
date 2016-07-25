@@ -21,8 +21,11 @@ using namespace rtp;
 
 Rtp::Rtp() {
 	
-	packet.firstOctet=0x80;			// 10000000 (v = 0b10 = 0d2)
+	packet.firstOctet = 0x80;			// 10000000 (v = 0b10 = 0d2)
 	packet.secondOctet = 0;			// 00000000 ( m = 0, pt = 0(pcmu))
+	packet.seqNum = 0;
+	packet.timeStamp = 0;
+	packet.SSRC = 0;
 	std::vector<uint32_t> CSRC(0);
 	extensionLength = 0;
 	extensionNum = 0;

@@ -2,11 +2,9 @@
 //
 
 
-#include "gtest/gtest.h"
-#include <fstream>
-
 #include "controlBlock.h"
-
+#include <gtest/gtest.h>
+#include <fstream>
 
 //RTP	
 using namespace rtp;
@@ -155,6 +153,13 @@ TEST(RtcpTest, version) {
 	ASSERT_EQ(rtcpPacket.getVersion(), 3);
 }
 
+
+TEST(RtcpTest, setReportCount) {
+
+
+
+}
+
 TEST(RtcpTest, payload) {
 	Rtcp rtcpPacket;
 	ASSERT_EQ(rtcpPacket.getPayload(), 0);
@@ -179,10 +184,10 @@ TEST(RtcpTest, reportCount) {
 TEST(RtcpTest, senderReportFormation) {
 	Rtcp rtcpPacket1;
 	rtcpPacket1.setVersion(2);//0b10000000
-	rtcpPacket1.setPayload(rtcpPacket1.SenderReport);
+
 	rtcpPacket1.setHeaderSSRC(1);
 	rtcpPacket1.setReportCount(0);
-	rtcpPacket1.setHeaderLength(6);
+	rtcpPacket1.setHeaderLength(100);
 	rtcpPacket1.senderReport.rtpTimestamp = 3;
 	rtcpPacket1.senderReport.ntpFractionTimestamp = 1;
 	rtcpPacket1.senderReport.ntpSecondsTimestamp = 2;
@@ -218,13 +223,78 @@ TEST(RtcpTest, senderReportFormation) {
 	rtcpPacket1.addReportBlock(rb2);
 
 	Rtcp rtcpPacket2;
+	rtcpPacket1.setPayload(rtcpPacket1.SenderReport);
 	std::shared_ptr<std::vector<uint8_t>> prestart = rtcpPacket1.createRtcpPacket();
 	std::vector<uint8_t> start2 = *prestart;
 	uint8_t* start = start2.data();
 	rtcpPacket2.setRtcpPacket(start2);
 
+	/*
+	ASSERT_EQ(*start, 134) << "vvpxcc";
+	std::cout << (int)(*start) << std::endl;
+	start++;
+	ASSERT_EQ(*start, 200) << "pt";
+	std::cout << (int)(*start) << std::endl;
+	start++;
+	ASSERT_EQ(*start, 6) << "length1";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "length2";
+	std::cout << (int)(*start) << std::endl;
+	start++;
+	ASSERT_EQ(*start, 1) << "ssrc1";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "ssrc2";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "ssrc3";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "ssrc4";
+	std::cout << (int)(*start) << std::endl;
+	start++;
+	ASSERT_EQ(*start, 2) << "ntp1";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "ntp2";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "ntp3";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "ntp4";
+	std::cout << (int)(*start) << std::endl;
+	start++;
+	ASSERT_EQ(*start, 1) << "sntp1";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "sntp2";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "sntp13";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "sntp14";
+	std::cout << (int)(*start) << std::endl;
+	start++;
+	ASSERT_EQ(*start, 3) << "rtp1";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "rtp2";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "rtp3";
+	std::cout << (int)(*start);// << std::endl;
+	start++;
+	ASSERT_EQ(*start, 0) << "rtp4";
+	std::cout << (int)(*start) << std::endl;
+	start++;
+	*/
+	//ASSERT_TRUE(false);
 	ASSERT_EQ(rtcpPacket1.getVersion(), rtcpPacket2.getVersion());
 	ASSERT_EQ(rtcpPacket1.getPayload(), rtcpPacket2.getPayload());
+
 	ASSERT_EQ(rtcpPacket1.getsHeaderSSRC(), rtcpPacket2.getsHeaderSSRC());
 	ASSERT_EQ(rtcpPacket1.getHeaderLength(), rtcpPacket2.getHeaderLength());
 	ASSERT_EQ(rtcpPacket1.getReportCount(), rtcpPacket2.getReportCount());

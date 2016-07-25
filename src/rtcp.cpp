@@ -5,6 +5,7 @@ using namespace rtcp;
 Rtcp::Rtcp()
 {
 	header.firstOctet = 0b10000000;
+	header.payloadType = 0;
 }
 
 
