@@ -1,12 +1,10 @@
 // testsRtp.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
-#include "gtest/gtest.h"
-#include <fstream>
-
 #include "controlBlock.h"
 
+#include <gtest/gtest.h>
+#include <fstream>
 
 //RTP	
 using namespace rtp;
