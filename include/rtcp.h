@@ -116,30 +116,24 @@ namespace rtcp
 		uint16_t calculateHeaderLength();
 
 
-		//template <typename rtcpPacket>
-		//rtcpPacket createRtcpPacket()
-
 		std::shared_ptr<std::vector<uint8_t>> createRtcpPacket() {
 			try {
 				header.length = calculateHeaderLength();
 
 				std::shared_ptr<std::vector<uint8_t>> outPacket(new std::vector <uint8_t>);
-				uint8_t* ptr = (uint8_t*)(&header);
+				uint8_t* ptr;
+				ptr = (uint8_t*)(&header);
+				(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(header));
+				ptr = (uint8_t*)(&SSRC);
+				(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(SSRC));
+
 				switch (getPayload())
 				{
-				case SenderReport:
-					(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(header));
-					ptr = (uint8_t*)(&SSRC);
-					(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(SSRC));
-					ptr = (uint8_t*)(&senderReport);
+				case SenderReport:ptr = (uint8_t*)(&senderReport);
 					(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(senderReport));
-					break;
-
 				case ReceiverReport:
 					setReportCount(reportCount);
-					(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(header));
-					ptr = (uint8_t*)(&SSRC);
-					(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(SSRC));
+					(*outPacket)[0] = header.firstOctet;
 					for each (reportBlock rp in reports)
 					{
 						ptr = (uint8_t*)(&rp);
@@ -149,9 +143,7 @@ namespace rtcp
 
 				case SourceDescription:          
 					setReportCount(sdesCount);
-					(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(header));
-					ptr = (uint8_t*)(&SSRC);
-					(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(SSRC));
+					(*outPacket)[0] = header.firstOctet;
 					for each(sdesItem si in items) 
 					{
 						(*outPacket).push_back(si.rtpSdesType);
@@ -162,9 +154,7 @@ namespace rtcp
 
 				case Goodbye:
 					setReportCount(leaverCount);
-					(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(header));
-					ptr = (uint8_t*)(&SSRC);
-					(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(SSRC));
+					(*outPacket)[0] = header.firstOctet;
 					for each(uint32_t l in otherLeavers) {
 						ptr = (uint8_t*)(&l);
 						(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(l));
@@ -189,81 +179,6 @@ namespace rtcp
 		}
 
 
-		/*
-		std::shared_ptr<uint8_t> createRtcpPacket()
-		{
-			uint8_t* packet;
-			header.length = calculateHeaderLength();
-			int packLength = 4 * (header.length + 1);
-			std::shared_ptr<uint8_t> packet_pointer(new uint8_t[packLength]);
-			packet = (uint8_t*)packet_pointer.get();
-			switch (getPayload())
-			{
-			case SenderReport:
-				memcpy(packet, &header, 4);
-				packet += 4;
-				memcpy(packet, &SSRC, 4);
-				packet += 4;
-				memcpy(packet, &senderReport, 20);
-				packet += 20;
-				break;
-			case ReceiverReport:
-				setReportCount(reportCount);
-				memcpy(packet, &header, 4);
-				packet += 4;
-				memcpy(packet, &SSRC, 4);
-				packet += 4;
-				for (int i = 0; i < getReportCount(); i++)
-				{
-					memcpy(packet, &getReportBlocks()[i], 24);
-					packet += 24;
-				}
-				break;
-			case SourceDescription:
-				setReportCount(sdesCount);
-				memcpy(packet, &header, 4);
-				packet += 4;
-				memcpy(packet, &SSRC, 4);
-				packet += 4;
-				for(sdesItem i:getSdesItems()){
-					memcpy(packet, &i.rtpSdesType, 1);
-					packet++;
-					memcpy(packet, &i.itemLength, 1);
-					packet++;
-					memcpy(packet, i.item.data(), sizeof(i.item)*i.item.size());
-					packet += i.item.size();
-				}
-				break;
-			case Goodbye:
-				setReportCount(leaverCount);
-				memcpy(packet, &header, 4);
-				packet+= 4;
-				memcpy(packet, &SSRC, 4);
-				packet += 4;
-				memcpy(packet, otherLeavers.data(), otherLeavers.size() * 4);
-				packet += otherLeavers.size() * 4;
-				if (optGoodbyeText) {
-					memcpy(packet, &goodbyeTextLength, sizeof(goodbyeTextLength));
-					packet += sizeof(goodbyeTextLength);
-					memcpy(packet, goodbyeText.data(), goodbyeText.size());
-					packet += goodbyeText.size();
-				}
-				break;
-			case AppDef:
-				packet = nullptr;
-				break;
-			default:
-				packet = nullptr;
-				break;
-			}
-				return packet_pointer;
-		}
-
-
-		*/
-		//template<typename rtcpPacket>
-		//bool setRtcpPacket(rtcpPacket inpacket) {
-		
 		bool setRtcpPacket(std::vector<uint8_t> inPacket) {
 			try {
 				int position = 0;
@@ -281,7 +196,7 @@ namespace rtcp
 				case SenderReport:
 					ptr = (senderInfo*)(inPacket.data() + position);
 					senderReport = *ptr;
-					break;
+					position += sizeof(senderReport);
 				case ReceiverReport:
 					resetReportBlock();
 					for (int i = 0; i < getReportCount(); i++) {
@@ -326,77 +241,6 @@ namespace rtcp
 				std::cerr << e.what() << std::endl;
 			}
 		}
-		/*
-		bool setRtcpPacket(uint8_t* inpacket) {
-			header = *(rtcpHeader*)inpacket;
-			inpacket += 4;
-			if (!(validateHeader())) {
-				return false;
-			}
-			SSRC = *(uint32_t*)inpacket;
-			inpacket += 4;
-			switch (getPayload())
-			{
-			case SenderReport:
-				senderReport = *(senderInfo*)inpacket;
-				inpacket += 20;
-				break;
-			case ReceiverReport:
-				resetReportBlock();
-				for (int i = 0; i < getReportCount(); i++)
-				{
-					reportBlock report = *(reportBlock*)inpacket;
-					reports.push_back(report);
-					inpacket += 24;
-				}
-				break;
-			case SourceDescription:
-				resetSdesItems();
-				for (int i = 0; i < getReportCount(); i++)
-				{
-					int sdesType = *(uint8_t*)inpacket;
-					inpacket++;
-					int sdesLength = *(uint8_t*)inpacket;
-					inpacket++;
-					std::vector<char> sdesData(inpacket, inpacket + sdesLength);
-					inpacket += sdesLength;
-					sdesItem item(sdesType, sdesData);
-					items.push_back(item);
-				}
-				break;
-			case Goodbye:
-				resetLeavers();
-				for (int i = 0; i < getReportCount(); i++)
-				{
-					uint32_t leaver = *(uint32_t*)inpacket;
-					addLeaver(leaver);
-					inpacket += 4;
-				}
-				if ((getReportCount() + 1) < getHeaderLength())
-				{
-					optGoodbyeText = true;
-					goodbyeTextLength = *(uint8_t*)inpacket;
-					inpacket++;
-					goodbyeText.clear();
-					for (int i = 0; i < getHeaderLength() - getReportCount() + 1; i++)
-					{
-						goodbyeText.push_back(*(char*)(inpacket));
-						inpacket++;
-					}
-				}
-				break;
-			case AppDef:
-
-				break;
-			default:
-				return false;
-				break;
-			}
-
-			return true;
-		}
-		*/
-		
 		bool validateHeader();
 
 

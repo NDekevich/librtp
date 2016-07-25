@@ -3,27 +3,8 @@
 /*
 todo note :
 
-
-
-
-
-
-
-!!!CHANGE DATA TYPE TO VECTORS!!!!!!!!!!!!!!! 
-fromRtcpleft only
-
-
-
-
-create generating rtp/rtcp methods;
-change way data is passed;
-
-
-working on:
-sending and receiving data from network(via rtp/rtcp);
-(sendRtpData
-receiveRtpData)
-
+finish parsing RTCP in/out messages.
+Change sdesItems rtcp + senderReport (possibly);
 
 
 
@@ -38,14 +19,12 @@ timestamp not working yet(both)
 //TODO!!!!!!!!
 controlBlock::controlBlock() :
 	io_service(new boost::asio::io_service)
-		
 
 {
-
-	//generateSSRC();
+	outInfo.ssrc = generateSSRC();
 	initializeOut();
-	//generateSeqNum();
-	//generateRtpTimestamp();
+	generateSeqNum();
+	generateRtpTimestampOffset();
 	
 
 }
@@ -56,24 +35,25 @@ controlBlock::~controlBlock()
 }
 //TODO!!!!!!!!
 
-void controlBlock::setSdesItems(rtcp::Rtcp::rtpSdesTypes type, std::string value)
+/* void controlBlock::setSdesItems(rtcp::Rtcp::rtpSdesTypes type, std::string value)
 {
 
-	if (((int)type > 0)&&((int)type<15)) {
+	if (((int)type > 0)&&((int)type<15)) 
+	{
 	outInfo.sdesInfo[(int)type - 1] = value;
 	}
 
-}
+}*/
 //TODO!!!!!!!!
 void controlBlock::initializeOut() {
 
 	outInfo.timeLastRtcp = 0;
-	outInfo.currentTime = 0;
+//	outInfo.currentTime = 0;
 	outInfo.senders = 0;
 	outInfo.pmembers = 0;
 	outInfo.members = 0;
 	outInfo.we_sent = false;
-	//outInfo.rtcp_bw = 123123123;
+//	outInfo.rtcp_bw = 123123123;
 	outInfo.initial = true;
 //	calculateRtcpInterval();
 
@@ -104,7 +84,6 @@ std::shared_ptr<boost::asio::ip::udp::socket> controlBlock::createInputSocket(sh
 	try {
 		boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), port);
 		std::shared_ptr<boost::asio::ip::udp::socket> socket(new boost::asio::ip::udp::socket(*io_service,ep));
-		
 		return socket;
 	}
 	catch (std::exception& e)
@@ -144,7 +123,7 @@ bool controlBlock::deleteRtpVal(std::shared_ptr<boost::asio::ip::udp::socket> so
 bool controlBlock::createRtcpVal(std::shared_ptr<boost::asio::ip::udp::socket> socket)
 {
 	try {
-		std::shared_ptr<rtcp::Rtcp> rtcp;
+		std::shared_ptr<rtcp::Rtcp> rtcp = std::shared_ptr<rtcp::Rtcp>(new rtcp::Rtcp);
 		socketRtcpMap[socket] = rtcp;
 		return true;
 	}
@@ -171,13 +150,12 @@ bool controlBlock::deleteRtcpVal(std::shared_ptr<boost::asio::ip::udp::socket> s
 uint32_t controlBlock::generateSSRC()
 {
 	uint32_t randomSSRC = 1;
-	return 
+	return randomSSRC;
 }
 
-uint32_t controlBlock::generateRtpTimestamp()
+void controlBlock::generateRtpTimestampOffset()
 {
-	uint32_t rtpTime = 100;
-	return rtpTime;
+	rtpOffset = 100;
 }
 
 uint32_t controlBlock::getNtpTimestampS()

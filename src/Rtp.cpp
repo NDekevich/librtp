@@ -5,6 +5,16 @@
 //#define STRICT
 
 
+// ----------------PACKET POINTERS----------------
+// todo add payload; --done
+// todo add padding;  
+// todo add calcuation of payload size(depending on format of it)
+//
+// todo add Host to network order (endianess)         <------------ important
+//
+// try with char arrays; -- done with vectors
+// 
+//
 
 
 using namespace rtp;
@@ -161,17 +171,6 @@ void Rtp::setHeaderExtension(std::vector<uint8_t> ext)
 }
 
 
-// ----------------PACKET POINTERS----------------
-// todo add payload; --done
-// todo add padding;
-// todo add calcuation of payload size(depending on format of it)
-//
-// todo add Host to network order (endianess)
-//
-// try with char arrays;
-// remove pointer arithmetic
-// 
-//
 
 
 std::shared_ptr<std::vector<uint8_t>> Rtp::createRtpPacket() const

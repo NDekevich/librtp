@@ -130,23 +130,27 @@ uint16_t rtcp::Rtcp::calculateHeaderLength()
 	switch (getPayload())
 	{
 	case SenderReport:
-		return 6;
+		length +=6;
 	case ReceiverReport:
-		return 1 + reportCount * 6;
+		length += 1 + reportCount * 6;
+		break;
 	case SourceDescription:
 		for (int i = 0; i < sdesCount; i++) {
 			length += (items[i].itemLength / 4);
 		}
-		return length;
+		break;
 	case Goodbye:
 		length += otherLeavers.size();
 		length += optGoodbyeText ? ((1 + goodbyeTextLength) / 4) : 0;
-		return length;
+		break;
 	case AppDef:
-		return 0;
+		length = 0;
+		break;
 	default:
-		return 0;
+		length = 0;
+		break;
 
+		return length;
 	}
 }
 
