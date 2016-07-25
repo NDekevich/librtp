@@ -1,10 +1,12 @@
 // testsRtp.cpp : Defines the entry point for the console application.
 //
 
+
+#include "gtest/gtest.h"
+#include <fstream>
+
 #include "controlBlock.h"
 
-#include <gtest/gtest.h>
-#include <fstream>
 
 //RTP	
 using namespace rtp;
@@ -535,5 +537,4 @@ int main(int argc, char** argv)
 {
 	testing::InitGoogleTest(&argc, argv);
 	RUN_ALL_TESTS();
-	std::cin.get();
 }
