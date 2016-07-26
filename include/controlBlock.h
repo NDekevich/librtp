@@ -1,7 +1,7 @@
 //#include "libavcodec/avcodec.h"
 #include "boost\asio.hpp"
 #include "boost\array.hpp"
-#include "RTP.h"
+#include "rtp.h"
 #include "rtcp.h"
 #include <unordered_map>
 #include <queue>

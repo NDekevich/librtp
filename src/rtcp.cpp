@@ -193,3 +193,12 @@ rtcp::Rtcp::sdesItem::sdesItem(int sdesType, std::vector<char> data)
 	itemLength = data.size();
 	item.insert(item.begin(), data.begin(), data.end());
 }
+
+rtcp::Rtcp::senderInfo::senderInfo()
+{
+	ntpSecondsTimestamp = 0;
+	ntpFractionTimestamp = 0;
+	rtpTimestamp = 0;
+	packetCount = 0;
+	octetCount = 0;
+}
