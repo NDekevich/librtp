@@ -125,36 +125,6 @@ void Rtcp::addGoodbyeText(std::string text)
 	optGoodbyeText = true;
 }
 
-uint16_t rtcp::Rtcp::calculateHeaderLength()
-{
-	int length = 1;
-	switch (getPayload())
-	{
-	case SenderReport:
-		length +=6;
-	case ReceiverReport:
-		length += 1 + reportCount * 6;
-		break;
-	case SourceDescription:
-		for (int i = 0; i < sdesCount; i++) {
-			length += (items[i].itemLength / 4);
-		}
-		break;
-	case Goodbye:
-		length += otherLeavers.size();
-		length += optGoodbyeText ? ((1 + goodbyeTextLength) / 4) : 0;
-		break;
-	case AppDef:
-		length = 0;
-		break;
-	default:
-		length = 0;
-		break;
-
-		return length;
-	}
-}
-
 bool Rtcp::validateHeader()
 {
 	if (getVersion() == 2) {

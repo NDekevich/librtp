@@ -95,22 +95,19 @@ TEST(RtpTest, CSRC)
 	}
 
 
-TEST(RtpTest, packetFormation) {
+TEST(RtpTest, packetFormation) 
+{
 
-
-
-
-
-		Rtp firstPacket;
+	Rtp firstPacket;
 		firstPacket.setMarker(true);
 		firstPacket.setExtension(true);
-		firstPacket.setExtensionNum(123321);
+		firstPacket.setExtensionNum(1221);
 		std::vector<uint8_t> headerExt = { 'a','b','c','d','e','f' };
 		firstPacket.setExtensionLength(6);
 		firstPacket.setHeaderExtension(headerExt);
 		firstPacket.addCSRC(320013);
 		firstPacket.addCSRC(124312);
-		firstPacket.setSeqNum(980321);
+		firstPacket.setSeqNum(9821);
 		firstPacket.setPayloadType(firstPacket.PCMU);
 		firstPacket.setTimestamp(121533);
 		firstPacket.setSSRC(135315);
@@ -464,17 +461,22 @@ TEST(RtcpTest, goodbyeFormation) {
 }
 
 //control block;
-
+/*
 TEST(control_block, rtpPacket) {
 	controlBlock cBlock;
 	std::string ip = "127.0.0.1";
 	short port = 30000;
+	std::cout << "1" << std::endl;
 	std::shared_ptr<boost::asio::ip::udp::socket> outS = cBlock.createOutputSocket(ip, port);
+	std::cout << "2" << std::endl;
 	cBlock.createRtpVal(outS);
 
+	std::cout << "3" << std::endl;
 
 	std::shared_ptr<boost::asio::ip::udp::socket> inS = cBlock.createInputSocket(port);
-	//cBlock.createRtpVal(inS);
+
+	std::cout << "4" << std::endl;
+	cBlock.createRtpVal(inS);
 
 	(*cBlock.socketRtpMap[outS]).setMarker(true);
 	(*cBlock.socketRtpMap[outS]).setExtension(true);
@@ -492,10 +494,12 @@ TEST(control_block, rtpPacket) {
 	(*cBlock.socketRtpMap[outS]).setSizeofPayload(4);
 	(*cBlock.socketRtpMap[outS]).setPayload(dataP);
 
+	std::cout << "5" << std::endl;
 
 	std::vector<uint8_t> v = *(*cBlock.socketRtpMap[outS]).createRtpPacket();
 	std::vector<char> outArray (v.begin(),v.end());
 
+	std::cout << "6" << std::endl;
 
 	cBlock.sendRtpData(dataP, outS);
 	//cBlock.sendRawData(&outArray, outS);
@@ -504,14 +508,20 @@ TEST(control_block, rtpPacket) {
 	cBlock.sendRtpData(dataP, outS);
 
 
+	std::cout << "7" << std::endl;
 	std::vector<uint8_t> inArray;
 	inArray.resize(2048);
 	//boost::asio::ip::udp::endpoint ep(boost::asio::ip::address::from_string(ip), port);
 
 	cBlock.receiveRtpData(inS);
+
+	std::cout << "8" << std::endl;
 	rtp::Rtp secondPacket(*cBlock.socketRtpMap[inS]);
+	
+
+	std::cout << "9" << std::endl;
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getVersion(), secondPacket.getVersion()) << "version";
-	//ASSERT_EQ((*cBlock.socketRtpMap[outS]).getMarker(), secondPacket.getMarker()) << "version";
+	ASSERT_TRUE(secondPacket.getMarker()) << "marker";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRCcount(), secondPacket.getCSRCcount()) << "Count";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRC()[0], secondPacket.getCSRC()[0]) << "CSRC_0";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRC()[1], secondPacket.getCSRC()[1]) << "CSRC_1";
@@ -524,7 +534,8 @@ TEST(control_block, rtpPacket) {
 
 	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getPayload(), *secondPacket.getPayload()) << "payload";
 
-	
+
+	std::cout << "10" << std::endl;
 	cBlock.receiveRtpData(inS);
 	rtp::Rtp thirdPacket(*cBlock.socketRtpMap[inS]);
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getVersion(), thirdPacket.getVersion()) << "version";
@@ -539,8 +550,9 @@ TEST(control_block, rtpPacket) {
 	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getHeaderExtension(), *thirdPacket.getHeaderExtension()) << "Header Extension";
 	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getPayload(), *thirdPacket.getPayload()) << "payload";
 
+	std::cout << "11WTF" << std::endl;
 }
-
+/*
 TEST(control_block, rtcpPacket) {
 	controlBlock cBlock;
 	std::string ip = "127.0.0.1";
@@ -577,7 +589,7 @@ TEST(control_block, rtcpPacket) {
 	rtcpLen = cBlock.receiveRtcpData(inS);
 	
 	if (rtcpLen > 0) {
-		rtcp:Rtcp secondPacket(*cBlock.socketRtcpMap[inS]);	
+		Rtcp secondPacket(*cBlock.socketRtcpMap[inS]);	
 		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).getVersion(), secondPacket.getVersion());
 		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).getPayload(), secondPacket.getPayload());
 		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.ntpFractionTimestamp, secondPacket.senderReport.ntpFractionTimestamp);
@@ -602,7 +614,7 @@ TEST(control_block, rtcpPacket) {
 		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.rtpTimestamp, secondPacket.senderReport.rtpTimestamp);
 	}
 }
-
+*/
 
 
 

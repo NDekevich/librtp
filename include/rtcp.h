@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <boost/foreach.hpp>
 
 
 
@@ -112,13 +113,11 @@ namespace rtcp
 		void resetLeavers();
 		void addGoodbyeText(std::string);
 
-		uint16_t calculateHeaderLength();
+
 
 
 		std::shared_ptr<std::vector<uint8_t>> createRtcpPacket() {
 			try {
-				header.length = calculateHeaderLength();
-
 				std::shared_ptr<std::vector<uint8_t>> outPacket(new std::vector <uint8_t>);
 				uint8_t* ptr;
 				ptr = (uint8_t*)(&header);
@@ -135,7 +134,9 @@ namespace rtcp
 				case ReceiverReport:
 					setReportCount(reportCount);
 					(*outPacket)[0] = header.firstOctet;
-					for each (reportBlock rp in reports)
+
+					//for each (reportBlock rp in reports)
+					BOOST_FOREACH(reportBlock rp, reports)
 					{
 						ptr = (uint8_t*)(&rp);
 						(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(rp));
@@ -145,7 +146,7 @@ namespace rtcp
 				case SourceDescription:          
 					setReportCount(sdesCount);
 					(*outPacket)[0] = header.firstOctet;
-					for each(sdesItem si in items) 
+					BOOST_FOREACH(sdesItem si , items) 
 					{
 						(*outPacket).push_back(si.rtpSdesType);
 						(*outPacket).push_back(si.itemLength);
@@ -156,7 +157,7 @@ namespace rtcp
 				case Goodbye:
 					setReportCount(leaverCount);
 					(*outPacket)[0] = header.firstOctet;
-					for each(uint32_t l in otherLeavers) {
+					BOOST_FOREACH(uint32_t l , otherLeavers) {
 						ptr = (uint8_t*)(&l);
 						(*outPacket).insert((*outPacket).end(), ptr, ptr + sizeof(l));
 					}
@@ -177,7 +178,9 @@ namespace rtcp
 			catch (std::exception& e) {
 				std::cout << "ERROR: creating RTCP" << std::endl;
 				std::cerr << e.what() << std::endl;
+				
 			}
+			return nullptr;
 		}
 
 

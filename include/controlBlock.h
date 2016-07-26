@@ -169,7 +169,7 @@ public:
 					//add ntpCLOCK!!!
 
 				case (201)://ReceiverReport
-					for each (rtcp::Rtcp::reportBlock rb in(*packet).getReportBlocks()) {
+					BOOST_FOREACH(rtcp::Rtcp::reportBlock rb , (*packet).getReportBlocks()) {
 						conversationMembers[rb.ssrc].fractionLostBySource = rb.fractionLost;
 						conversationMembers[rb.ssrc].packetLostBySource = rb.packetsLost;
 						conversationMembers[rb.ssrc].highestSeqNumBySource = rb.highestSeqNum;
@@ -187,7 +187,7 @@ public:
 					break;
 				case (203)://GoodbyeReport
 					(*convM).leftConversation = true;
-					for each(uint32_t l in (*packet).otherLeavers) 
+					BOOST_FOREACH(uint32_t l , (*packet).otherLeavers) 
 					{
 						(conversationMembers[l]).leftConversation = true;
 					}
