@@ -51,7 +51,6 @@ namespace rtcp
 			std::vector<char> item;
 			sdesItem(int sdesType, std::string data);
 			sdesItem(int sdesType, std::vector<char> data);
-			sdesItem();
 		};
 
 		struct senderInfo {
@@ -60,7 +59,7 @@ namespace rtcp
 			uint32_t rtpTimestamp;
 			uint32_t packetCount;
 			uint32_t octetCount;
-
+			senderInfo();
 		};
 
 		struct reportBlock {

@@ -60,6 +60,7 @@ namespace rtp
 			uint16_t seqNum;
 			uint32_t timeStamp;
 			uint32_t SSRC;
+			rtpPacket();
 		};
 		
 
@@ -99,8 +100,7 @@ namespace rtp
 		void setExtensionNum(uint16_t num);
 		uint16_t getExtensionNum() const { return extensionNum; }
 
-		template <typename extensionType>
-		void Rtp::setHeaderExtension(extensionType pointer);
+		void Rtp::setHeaderExtension(std::vector<uint8_t> ext);
 
 
 		bool addCSRC(uint32_t);
@@ -114,7 +114,8 @@ namespace rtp
 		std::vector<uint8_t>* getPayload() { return &payload; }
 
 		std::vector<uint8_t>* getHeaderExtension() { return &headerExtension; }
-		void setHeaderExtension(std::vector<uint8_t> ext);
+		//void setHeaderExtension(std::vector<uint8_t> ext);
+		
 
 		std::shared_ptr<std::vector<uint8_t>> createRtpPacket() const;
 	

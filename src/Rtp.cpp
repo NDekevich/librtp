@@ -1,8 +1,12 @@
-#include "RTP.h"
+#include "rtp.h"
 #include <stdlib.h>
 #include <iostream>
 
 //#define STRICT
+
+
+//REDO
+//HEADER EXTENSION
 
 
 // ----------------PACKET POINTERS----------------
@@ -143,10 +147,8 @@ void Rtp::setExtensionNum(uint16_t num)
 	extensionNum = num;
 }
 
-template <typename extensionType>
-void Rtp::setHeaderExtension(extensionType pointer) {
-	headerExtention = *pointer;
-}
+
+
 
 bool Rtp::addCSRC(uint32_t SRC) {
 	if (getCSRCcount()<15){
@@ -248,4 +250,13 @@ void Rtp::setRtpPacket(std::vector<uint8_t> input)
 	{
 		payload.insert(payload.begin(), input.begin() + position, input.end());
 	}
+}
+
+rtp::Rtp::rtpPacket::rtpPacket()
+{
+	firstOctet = 128;
+	secondOctet = 0;
+	seqNum = 0;
+	timeStamp = 0;
+	SSRC = 0;
 }

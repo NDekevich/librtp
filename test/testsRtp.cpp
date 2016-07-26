@@ -317,7 +317,6 @@ TEST(RtcpTest, senderReportFormation) {
 		ASSERT_EQ(blocks1[i].packetsLost, blocks2[i].packetsLost);
 		ASSERT_EQ(blocks1[i].ssrc, blocks2[i].ssrc);
 	}
-
 }
 
 TEST(RtcpTest, recieverReportFormation) {
@@ -519,8 +518,11 @@ TEST(control_block, rtpPacket) {
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getPayloadType(), secondPacket.getPayloadType()) << "type";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getTimestamp(), secondPacket.getTimestamp()) << "Timestamp";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getSSRC(), secondPacket.getSSRC()) << "SSRC";
+
 	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getHeaderExtension(), *secondPacket.getHeaderExtension()) << "Header Extension";
+
 	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getPayload(), *secondPacket.getPayload()) << "payload";
+
 	
 	cBlock.receiveRtpData(inS);
 	rtp::Rtp thirdPacket(*cBlock.socketRtpMap[inS]);
