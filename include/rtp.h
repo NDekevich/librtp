@@ -1,4 +1,7 @@
 //#pragma once
+//#pragma pack(1)
+
+
 #include <bitset>
 #include <stdint.h>
 #include <memory>

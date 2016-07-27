@@ -29,7 +29,10 @@ controlBlock::controlBlock() :
 
 controlBlock::~controlBlock()
 {
+	socketRtcpMap.clear();
+	socketRtpMap.clear();
 }
+
 //TODO!!!!!!!!
 
 /* void controlBlock::setSdesItems(rtcp::Rtcp::rtpSdesTypes type, std::string value)
@@ -92,17 +95,20 @@ std::shared_ptr<boost::asio::ip::udp::socket> controlBlock::createInputSocket(sh
 
 bool controlBlock::createRtpVal(std::shared_ptr<boost::asio::ip::udp::socket> socket)
 {
+
 	try {
-		std::shared_ptr<rtp::Rtp> rtp = std::shared_ptr<rtp::Rtp>(new rtp::Rtp);
-		socketRtpMap[socket] = rtp;
+	//	std::shared_ptr<rtp::Rtp> rtpP = std::shared_ptr<rtp::Rtp>(new rtp::Rtp);
+		socketRtpMap[socket] = std::make_shared<rtp::Rtp>();
 		return true;
 	} 
 	catch (std::exception& e)
 	{
+		std::cout << "could not create RTP" << std::endl;
 		std::cerr << e.what() << std::endl;
 		return false;
 	}
 }
+
 
 bool controlBlock::deleteRtpVal(std::shared_ptr<boost::asio::ip::udp::socket> socket)
 {
