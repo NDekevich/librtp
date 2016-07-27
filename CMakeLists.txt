@@ -32,5 +32,6 @@ if(BUILD_TESTING)
     add_subdirectory(${PROJECT_SOURCE_DIR}/ext/gtest)
     add_subdirectory(test)
 endif()
+add_subdirectory(example)
 
 
