@@ -6,13 +6,12 @@
 #include "controlBlock.h"
 #define SENDER false
 #define PORT 30000
+#define IP "127.0.0.1"
 
 int main() {
 	if (SENDER) {
-		std::ofstream file("test.txt");
-		file.close();
 		controlBlock cBlock;
-		std::string ip = "127.0.0.1";
+		std::string ip = IP;
 		auto outS = cBlock.createOutputSocket(ip, PORT);
 		if (!cBlock.createRtpVal(outS)) {
 			std::cout << "ERROR: -1" << std::endl;
