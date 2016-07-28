@@ -13,6 +13,7 @@ int main(int ac, char *av[]) {
 	try 
 	{
 		bool sender;
+		bool rs = false;
 		std::string ip = "127.0.0.1";
 		std::string file = "file.txt";
 		short port = 30000;
@@ -24,6 +25,7 @@ int main(int ac, char *av[]) {
 			("ip", po::value<std::string>(&ip), "ip address")
 			("port", po::value<short>(&port),"port number")
 			("f", po::value<std::string>(&file), "file")
+			("rs", "Print message on receiving a packet")
 			;
 
 		po::positional_options_description p;
@@ -71,6 +73,11 @@ int main(int ac, char *av[]) {
 			std:: cout << "from file " << vm["f"].as<std::string>()
 				<< "\n";
 		}
+		
+		if (vm.count("rs")) {
+			std::cout << "Recieve stats" << std::endl;
+			rs = true;
+		}
 
 
 
@@ -103,6 +110,9 @@ int main(int ac, char *av[]) {
 		else
 		{
 			controlBlock cBlock;
+			uint32_t ssrc = 0;
+			rtp::Rtp::rtpPayloadTypes pt;
+			uint32_t packetsReceived;
 			auto inS = cBlock.createInputSocket(port);
 			std::vector<uint8_t> data;
 			std::ofstream myfile(file);
@@ -110,13 +120,25 @@ int main(int ac, char *av[]) {
 			{
 				for (;;) {
 					size_t len = cBlock.receiveRtpData(inS);
-
-					std::vector<uint8_t> data = *(*cBlock.socketRtpMap[inS]).getPayload();
+					if (rs) {
+						std::vector<uint8_t> data = *(*cBlock.socketRtpMap[inS]).getPayload();
+						if (ssrc != (*cBlock.socketRtpMap[inS]).getSSRC()) {
+							ssrc = (*cBlock.socketRtpMap[inS]).getSSRC();
+							std::cout << "new SSRC : " << ssrc << std::endl;
+						}
+						if (pt != (*cBlock.socketRtpMap[inS]).getPayloadType()) {
+							pt = (*cBlock.socketRtpMap[inS]).getPayloadType();
+							std::cout << " new payload type :  " << pt << std::endl;
+						}
+						packetsReceived++;
+						if (packetsReceived % 100 == 0) {
+							std::cout << "received " << packetsReceived << " packets" << std::endl;
+						}
+					}
 					//size_t len = cBlock.receiveRawData(&data, inS);	
 					//myfile << "r: ";
 					std::ostream_iterator<uint8_t> output_iterator(myfile);
 					std::copy(data.begin(), data.end(), output_iterator);
-					myfile << std::endl;
 				}
 				myfile.close();
 			}

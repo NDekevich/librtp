@@ -4,7 +4,11 @@
 using namespace rtcp;
 Rtcp::Rtcp()
 {
+#if IS_BIG_ENDIAN
 	header.firstOctet = 0b10000000;
+#else
+	header.firstOctet = 0b00000010;
+#endif
 	header.payloadType = 0;
 }
 
@@ -12,12 +16,11 @@ Rtcp::Rtcp()
 Rtcp::~Rtcp()
 {
 }
-
+#if IS_BIG_ENDIAN
 void Rtcp::setVersion(int version)
 {
 	header.firstOctet = (header.firstOctet & 0x3F) + (version << 6); //0b00111111 
 }
-
 int Rtcp::getVersion() const
 {
 	return (header.firstOctet & 0xC0) >> 6;  //0b11000000
@@ -32,7 +35,6 @@ void Rtcp::setPadding(bool padding)
 		header.firstOctet &= 0xDF; //0b11011111
 	}
 }
-
 bool  Rtcp::getPadding() const
 {
 	return ((header.firstOctet & 0x20) >> 5) == 1; //0b00100000
@@ -42,11 +44,45 @@ void Rtcp::setReportCount(int rc)
 {
 	header.firstOctet = (header.firstOctet & 0xE0) + rc; //0b11100000
 }
-
 int Rtcp::getReportCount()
 {
 	return (header.firstOctet & 0x1F);//0b00011111
 }
+
+#else
+
+void Rtcp::setReportCount(int rc)
+{
+	header.firstOctet = (header.firstOctet & 0b00000111) + (rc << 3);
+}
+int Rtcp::getReportCount()
+{
+	return (header.firstOctet & 0b11111000)>>3;
+}
+
+void Rtcp::setPadding(bool padding)
+{
+	if (padding) {
+		header.firstOctet |= 0b00000100; //0b00100000
+	}
+	else {
+		header.firstOctet &= 0b11111011; //0b11011111
+	}
+}
+bool  Rtcp::getPadding() const
+{
+	return ((header.firstOctet & 0b00000100) >>2) == 1; //0b00100000
+}
+
+void Rtcp::setVersion(int version)
+{
+	header.firstOctet = (header.firstOctet & 0b11111100) + (version); //0b00111111 
+}
+int Rtcp::getVersion() const
+{
+	return (header.firstOctet & 0b00000011);  //0b11000000
+}	
+#endif
 
 void Rtcp::setPayload(rtcpPayloadTypes pc)
 {

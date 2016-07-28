@@ -5,7 +5,7 @@
 #include <iostream>
 #include <boost/foreach.hpp>
 
-
+#define IS_BIG_ENDIAN 0
 
 
 
@@ -80,6 +80,7 @@ namespace rtcp
 			uint8_t payloadType;
 			uint16_t length;
 		};
+
 
 		void setVersion(int version = 2);
 		int getVersion() const;

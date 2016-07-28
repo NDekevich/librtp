@@ -107,7 +107,7 @@ TEST(RtpTest, CSRC)
 
 TEST(RtpTest, packetFormation) 
 {
-
+	
 	Rtp firstPacket;
 		firstPacket.setMarker(true);
 		firstPacket.setExtension(true);
@@ -129,7 +129,7 @@ TEST(RtpTest, packetFormation)
 
 		std::shared_ptr<std::vector<uint8_t>> startpre = firstPacket.createRtpPacket();
 
-		std::vector<uint8_t> start2 = *startpre;
+	/*	std::vector<uint8_t> start2 = *startpre;
 		uint8_t* start = start2.data();
 
 
@@ -148,7 +148,7 @@ TEST(RtpTest, packetFormation)
 		ASSERT_EQ(*firstPacket.getPayload(), *secondPacket.getPayload()) << "payload";
 
 
-
+		*/
 	}
 
 
