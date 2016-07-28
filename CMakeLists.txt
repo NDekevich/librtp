@@ -10,7 +10,7 @@ set(Boost_USE_STATIC_LIBS ON)
 
 find_package(Threads REQUIRED)
 find_package(Boost 1.58.0 REQUIRED
-    COMPONENTS system date_time regex)
+    COMPONENTS system date_time regex program_options)
 
 set(SRC_FILES
     src/rtp.cpp
