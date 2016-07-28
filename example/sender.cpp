@@ -113,7 +113,7 @@ int main(int ac, char *av[]) {
 
 					std::vector<uint8_t> data = *(*cBlock.socketRtpMap[inS]).getPayload();
 					//size_t len = cBlock.receiveRawData(&data, inS);	
-					myfile << "r: ";
+					//myfile << "r: ";
 					std::ostream_iterator<uint8_t> output_iterator(myfile);
 					std::copy(data.begin(), data.end(), output_iterator);
 					myfile << std::endl;
