@@ -2,6 +2,8 @@
 //#pragma pack(1)
 
 
+// ADD RTCP sending when receiving/sending rtp packets
+
 #include "rtp.h"
 #include "rtcp.h"
 
@@ -14,6 +16,7 @@
 #define BUFFER_SIZE 1024
 #define PACKETS_TO_IGNORE 5
 
+using socket_udp = boost::asio::ip::udp::socket;
 
 class controlBlock
 {
@@ -40,12 +43,12 @@ public:
 	uint8_t* createRtcpPacket();
 
 
-	bool receiveRtpData(std::shared_ptr <boost::asio::ip::udp::socket> socket) {
+	int receiveRtpData(std::shared_ptr <boost::asio::ip::udp::socket> socket) {
 		try {
 			if (socketRtpMap[socket] == nullptr) {
 				if (!(createRtpVal(socket))) {
 					std::cerr << "Could not create rtp receiver\n\n";
-					return false;
+					return 0;
 				}
 			}
 			std::vector<uint8_t> v(BUFFER_SIZE);
@@ -70,14 +73,29 @@ public:
 					(*convM).packetLost += ((*packet).getSeqNum() - (*convM).highestSeqNum - 1);
 				}
 			}
-			return true;
+			return len;
 		}
 		catch (std::exception& e)
 		{
 			std::cerr << e.what() << std::endl;
-			return false;
+			return 0;
 		}
 	}
+
+	int receiveRtp_from(std::shared_ptr<boost::asio::ip::udp::socket> socket, short port) {
+		try 
+		{
+			(*socket).close();
+			(*socket).bind(boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port));
+			return (receiveRtpData(socket));
+		}
+		catch (std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			return 0;
+		}
+	}
+
 
 	template<typename D>
 	bool sendRtpData(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket) {
@@ -107,6 +125,22 @@ public:
 			(*convM).packetsSent++;
 			(*convM).octetsSent += v.size();
 			return true;
+		}
+		catch (std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			return false;
+		}
+	}
+
+	template<typename D>
+	bool sendRtp_to(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket, std::string ip, short port) 
+	{
+		try 
+		{
+			(*socket).close();
+			(*socket).bind(boost::asio::ip::udp::endpoint(ip, port));
+			return sendRtpData(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket)
 		}
 		catch (std::exception& e)
 		{
