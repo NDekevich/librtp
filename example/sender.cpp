@@ -4,7 +4,7 @@
 #include <string>
 
 #include "controlBlock.h"
-#define SENDER true
+#define SENDER false
 #define PORT 30000
 
 int main() {
@@ -52,7 +52,7 @@ int main() {
 				//size_t len = cBlock.receiveRawData(&data, inS);	
 				myfile << "r: ";
 				std::ostream_iterator<uint8_t> output_iterator(myfile);
-				std::copy(data.begin(), data.begin()+len, output_iterator);
+				std::copy(data.begin(), data.end(), output_iterator);
 				myfile << std::endl;
 			}
 			myfile.close();
