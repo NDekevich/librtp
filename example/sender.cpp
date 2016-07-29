@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <stdlib.h>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -93,45 +94,47 @@ int main(int ac, char *av[]) {
 
 		if (sender) {
 			controlBlock cBlock;
+			uint32_t timestamp = 1123320;
+			uint32_t step = 20;
+			uint16_t seqNum = 1000;
+			uint32_t ssrc = 3412340;
 			auto outS = cBlock.createOutputSocket(ip, port);
 			if (!cBlock.createRtpVal(outS)) {
 				std::cout << "ERROR: -1" << std::endl;
 				return -1;
 			}
-			(*cBlock.socketRtpMap[outS]).setSSRC(1001);
 			std::string text;
 			char c;
 			std::vector<uint8_t> data;
 			
-			std::ifstream myfile(file);
+			std::ifstream myfile;
+			myfile.open(file, std::ios::binary);
 			int i = 0;
 			int j = 0;
 			if (myfile.is_open())
 			{
 				while (myfile.get(c))
 				{
-				//	std::cout << c;
 					data.push_back(c);
-					/*if (c == 0x03)
-					{
-						std::cout << "ETX" << std::endl;
-					}
-					if (c == 0x00)
-					{
-						std::cout << "NULL" << std::endl;
-					}*/
 					if (j == 255) {
 						j = 0;
+						seqNum++;
+						timestamp += step;
+						(*cBlock.socketRtpMap[outS]).setSSRC(ssrc);
+						(*cBlock.socketRtpMap[outS]).setSeqNum(seqNum);
+						(*cBlock.socketRtpMap[outS]).setTimestamp(timestamp);
 						cBlock.sendRtpData(data, outS);
 						data.clear();				
-						if (i % 100 == 0) std::cout << "sent : " << i << " packets" << std::endl;
+						Sleep(5);
 						i++;
+						if (i % 100 == 0) std::cout << "sent : " << i << " packets" << std::endl;
+						//std::for_each(data.begin(), data.end(), check);
 					}
-					j++;
-
-					//std::for_each(data.begin(), data.end(), check);
-
+					else {
+						j++;
+					}
 				}
+				std::cout << "total packets sent : " << i << std::endl;
 				myfile.close();
 			}
 			return 1;
@@ -148,7 +151,8 @@ int main(int ac, char *av[]) {
 			bool timestampInit = true;
 			auto inS = cBlock.createInputSocket(port);
 			std::vector<uint8_t> data;
-			std::ofstream myfile(file);
+			std::ofstream myfile;
+			myfile.open(file, std::ios::binary);
 			if (myfile.is_open())
 			{
 				for (;;) {
@@ -196,7 +200,7 @@ int main(int ac, char *av[]) {
 						}
 						else
 						{
-							if (timeStamp + timestampInit != (*cBlock.socketRtpMap[inS]).getTimestamp())
+							if (timeStamp + timeStampStep != (*cBlock.socketRtpMap[inS]).getTimestamp())
 							{
 								timeStamp = (*cBlock.socketRtpMap[inS]).getTimestamp();
 								std::cout << "timestamp changed !" << std::endl;
@@ -215,8 +219,8 @@ int main(int ac, char *av[]) {
 				}
 				myfile.close();
 			}
-			return 1;
-		}
+			return packetsReceived;
+		} 
 	}
 	catch (std::exception& e) {
 		std::cerr <<"Error Sender:" << e.what() << std::endl;

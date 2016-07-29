@@ -355,9 +355,9 @@ std::shared_ptr<std::vector<uint8_t>> Rtp::createRtpPacket() const
 		uint32_t temp32;
 		uint16_t temp16;
 		rtp::Rtp::rtpPacket oPack = packet;
-		boost::endian::endian_reverse_inplace(oPack.seqNum);
-		boost::endian::endian_reverse_inplace(oPack.SSRC);
-		boost::endian::endian_reverse_inplace(oPack.timeStamp);
+		oPack.seqNum = boost::endian::endian_reverse(packet.seqNum);
+		oPack.SSRC = boost::endian::endian_reverse(packet.SSRC);
+		oPack.timeStamp = boost::endian::endian_reverse(packet.timeStamp);
 		uint8_t* ptr = (uint8_t*)&oPack;
 		(*outPacket).insert((*outPacket).begin(), ptr, ptr + sizeof(oPack));
 		
@@ -382,14 +382,14 @@ std::shared_ptr<std::vector<uint8_t>> Rtp::createRtpPacket() const
 		
 		(*outPacket).insert((*outPacket).end(), payload.begin(), payload.end());
 		int length = (*outPacket).size();
-
+		/*
 		if ((getPadding()) && (length % 4 != 0)) {
 			uint8_t i = 0;
 			for (i = 0; i < (3 - length % 4); i++) {
 				(*outPacket).push_back(0);
 			}
 			(*outPacket).push_back(boost::endian::endian_reverse(i + 1));
-		}
+		}*/
 	}
 	catch (std::exception& e)
 	{
@@ -415,6 +415,7 @@ void Rtp::setRtpPacket(std::vector<uint8_t> input)
 		position += 4;
 		ptr32 = (uint32_t*)(input.data() + position);
 		packet.SSRC = boost::endian::endian_reverse(*ptr32);
+		position += 4;
 
 		int cc = getCSRCcount();
 		CSRC.clear();
