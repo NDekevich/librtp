@@ -112,23 +112,25 @@ int main(int ac, char *av[]) {
 				{
 				//	std::cout << c;
 					data.push_back(c);
-					if (c == 0x03)
+					/*if (c == 0x03)
 					{
 						std::cout << "ETX" << std::endl;
 					}
 					if (c == 0x00)
 					{
 						std::cout << "NULL" << std::endl;
-					}
+					}*/
 					if (j == 255) {
 						j = 0;
 						cBlock.sendRtpData(data, outS);
-						data.clear();
+						data.clear();				
+						if (i % 100 == 0) std::cout << "sent : " << i << " packets" << std::endl;
+						i++;
 					}
 					j++;
-					if (i % 100 == 0) std::cout << "sent : " << i << " packets"<<std::endl;
-					std::for_each(data.begin(), data.end(), check);
-					i++;
+
+					//std::for_each(data.begin(), data.end(), check);
+
 				}
 				myfile.close();
 			}
