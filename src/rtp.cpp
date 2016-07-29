@@ -391,7 +391,7 @@ std::shared_ptr<std::vector<uint8_t>> Rtp::createRtpPacket() const
 	}
 	catch (std::exception& e)
 	{
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Error rtp 1: " << e.what() << std::endl;
 	}
 	return outPacket;
 }
@@ -401,7 +401,7 @@ void Rtp::setRtpPacket(std::vector<uint8_t> input)
 	int position = 0;
 	packet.firstOctet = input[position];
 	position++;
-	packet.firstOctet = input[position];
+	packet.secondOctet = input[position];
 	position++;
 	uint16_t* ptr16 = (uint16_t*)(input.data()+position);
 	packet.seqNum = boost::endian::endian_reverse(*ptr16);

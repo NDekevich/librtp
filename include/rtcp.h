@@ -177,7 +177,7 @@ namespace rtcp
 			}
 			catch (std::exception& e) {
 				std::cout << "ERROR: creating RTCP" << std::endl;
-				std::cerr << e.what() << std::endl;
+				std::cerr <<"Error rtcp.h 1 : " <<e.what() << std::endl;
 				
 			}
 			return nullptr;
@@ -245,7 +245,7 @@ namespace rtcp
 			}
 			catch (std::exception& e) {
 				std::cout << "ERROR: setting RTCP" << std::endl;
-				std::cerr << e.what() << std::endl;
+				std::cerr << "Error rtcp.h 2: " << e.what() << std::endl;
 				return false;
 			}
 		}

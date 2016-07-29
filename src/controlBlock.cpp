@@ -73,7 +73,7 @@ std::shared_ptr<boost::asio::ip::udp::socket> controlBlock::createOutputSocket(s
 	catch (std::exception& e)
 	{
 
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Error H! Cblock 1: " << e.what() << std::endl;
 		return nullptr;
 	}
 }
@@ -88,7 +88,7 @@ std::shared_ptr<boost::asio::ip::udp::socket> controlBlock::createInputSocket(sh
 	}
 	catch (std::exception& e)
 	{
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Error H! Cblock 2: " << e.what() << std::endl;
 		return nullptr;
 	}
 }
@@ -104,7 +104,7 @@ bool controlBlock::createRtpVal(std::shared_ptr<boost::asio::ip::udp::socket> so
 	catch (std::exception& e)
 	{
 		std::cout << "could not create RTP" << std::endl;
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Error H! Cblock 3: " << e.what() << std::endl;
 		return false;
 	}
 }
@@ -118,7 +118,7 @@ bool controlBlock::deleteRtpVal(std::shared_ptr<boost::asio::ip::udp::socket> so
 	}
 	catch (std::exception& e)
 	{
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Error H! Cblock 4: " << e.what() << std::endl;
 		return false;
 	}
 }
@@ -132,7 +132,7 @@ bool controlBlock::createRtcpVal(std::shared_ptr<boost::asio::ip::udp::socket> s
 	}
 	catch (std::exception& e)
 	{
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Error H! Cblock 5: " << e.what() << std::endl;
 		return false;
 	}
 }
@@ -145,7 +145,7 @@ bool controlBlock::deleteRtcpVal(std::shared_ptr<boost::asio::ip::udp::socket> s
 	}
 	catch (std::exception& e)
 	{
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Error H! Cblock 6: " << e.what() << std::endl;
 		return false;
 	}
 }

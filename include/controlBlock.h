@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <queue>
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 128000
 #define PACKETS_TO_IGNORE 5
 
 using socket_udp = boost::asio::ip::udp::socket;
@@ -57,7 +57,7 @@ public:
 			std::vector<uint8_t> temp(v.begin(), v.begin() + len);
 			rtp::Rtp* packet = socketRtpMap[socket].get();
 			(*socketRtpMap[socket].get()).setRtpPacket(temp);
-			convMember* convM = &(conversationMembers[((*socketRtpMap[socket].get()).getSSRC())]);
+			/*convMember* convM = &(conversationMembers[((*socketRtpMap[socket].get()).getSSRC())]);
 			if ((*convM).packetsReceived < PACKETS_TO_IGNORE) {
 				(*convM).packetsReceived++;
 			}
@@ -72,12 +72,12 @@ public:
 					//	(*convM).lastRtpTimestampArrival = currentRtpTime();
 					(*convM).packetLost += ((*packet).getSeqNum() - (*convM).highestSeqNum - 1);
 				}
-			}
+			}*/
 			return len;
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << e.what() << std::endl;
+			std::cerr<<"Error Cblock 1: " << e.what() << std::endl;
 			return 0;
 		}
 	}
@@ -91,7 +91,7 @@ public:
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << e.what() << std::endl;
+			std::cerr << "Error Cblock 2: " << e.what() << std::endl;
 			return 0;
 		}
 	}
@@ -128,7 +128,7 @@ public:
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << e.what() << std::endl;
+			std::cerr<< "Error Cblock 3: " << e.what() << std::endl;
 			return false;
 		}
 	}
@@ -144,7 +144,7 @@ public:
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << e.what() << std::endl;
+			std::cerr << "Error Cblock 4: " << e.what() << std::endl;
 			return false;
 		}
 	}
@@ -167,7 +167,7 @@ public:
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << e.what() << std::endl;
+			std::cerr << "Error Cblock 5: " << e.what() << std::endl;
 			return false;
 		}
 	}
@@ -248,7 +248,7 @@ public:
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << e.what() << std::endl;
+			std::cerr << "Error Cblock 6: " << e.what() << std::endl;
 			return false;
 		}
 	}
@@ -261,7 +261,7 @@ public:
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << e.what() << std::endl;
+			std::cerr << "Error Cblock 7: " << e.what() << std::endl;
 			return false;
 		}
 	}
@@ -273,7 +273,7 @@ public:
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << e.what() << std::endl;
+			std::cerr << "Error Cblock 8: " << e.what() << std::endl;
 			return -1;
 		}
 	}

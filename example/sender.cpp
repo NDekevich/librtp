@@ -16,7 +16,7 @@ int main(int ac, char *av[]) {
 		bool rs = false;
 		std::string ip = "127.0.0.1";
 		std::string file = "file.txt";
-		short port = 30000;
+		short port = 10001;
 		po::options_description desc("Allowed options");
 		desc.add_options()
 			("help", "produce help message")
@@ -112,31 +112,44 @@ int main(int ac, char *av[]) {
 			controlBlock cBlock;
 			uint32_t ssrc = 0;
 			rtp::Rtp::rtpPayloadTypes pt;
-			uint32_t packetsReceived;
+			uint32_t packetsReceived = 0;
+			uint32_t seqNum = 0;
 			auto inS = cBlock.createInputSocket(port);
 			std::vector<uint8_t> data;
 			std::ofstream myfile(file);
 			if (myfile.is_open())
 			{
 				for (;;) {
-					size_t len = cBlock.receiveRtpData(inS);
+					size_t len = cBlock.receiveRtpData(inS);	
+					std::vector<uint8_t> data = *(*cBlock.socketRtpMap[inS]).getPayload();
 					if (rs) {
-						std::vector<uint8_t> data = *(*cBlock.socketRtpMap[inS]).getPayload();
-						if (ssrc != (*cBlock.socketRtpMap[inS]).getSSRC()) {
+					
+						if (ssrc != (*cBlock.socketRtpMap[inS]).getSSRC()) 
+						{
 							ssrc = (*cBlock.socketRtpMap[inS]).getSSRC();
 							std::cout << "new SSRC : " << ssrc << std::endl;
 						}
-						if (pt != (*cBlock.socketRtpMap[inS]).getPayloadType()) {
+						if (pt != (*cBlock.socketRtpMap[inS]).getPayloadType()) 
+						{
 							pt = (*cBlock.socketRtpMap[inS]).getPayloadType();
-							std::cout << " new payload type :  " << pt << std::endl;
+							std::cout << "new payload type :  " << pt << std::endl;
 						}
 						packetsReceived++;
-						if (packetsReceived % 100 == 0) {
+						if (packetsReceived % 100 == 0) 
+						{
 							std::cout << "received " << packetsReceived << " packets" << std::endl;
 						}
+						if (seqNum != (*cBlock.socketRtpMap[inS]).getSeqNum()) {
+							seqNum = (*cBlock.socketRtpMap[inS]).getSeqNum();
+							std::cout << "lost Packet" << std::endl;
+							std::cout << "new SeqNum : " << seqNum <<std::endl;
+							
+						}
+						seqNum++;
 					}
 					//size_t len = cBlock.receiveRawData(&data, inS);	
-					//myfile << "r: ";
+					myfile << "r: ";
+
 					std::ostream_iterator<uint8_t> output_iterator(myfile);
 					std::copy(data.begin(), data.end(), output_iterator);
 				}
@@ -146,7 +159,7 @@ int main(int ac, char *av[]) {
 		}
 	}
 	catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
+		std::cerr <<"Error Sender:" << e.what() << std::endl;
 		return 0;
 	}
 }
