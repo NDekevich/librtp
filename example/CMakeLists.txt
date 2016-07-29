@@ -9,3 +9,8 @@ target_link_libraries(${PROJECT_NAME} Ipf.proto ${Boost_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${GTEST_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} ws2_32 advapi32 Iphlpapi)
+endif()
+
+
