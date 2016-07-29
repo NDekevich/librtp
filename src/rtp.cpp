@@ -31,12 +31,13 @@ using namespace rtp;
 
 Rtp::Rtp() {
 	
-	if (IS_BIG_ENDIAN) {
-		packet.firstOctet = 0x80;			// 10000000 (v = 0b10 = 0d2)
+	if (true){//IS_BIG_ENDIAN) {
+		packet.firstOctet = 0x80;	// 10000000 (v = 0b10 = 0d2)
 	}
 	else
 	{
 		packet.firstOctet = 0b00000010;
+		
 	}
 	packet.secondOctet = 0;			// 00000000 ( m = 0, pt = 0(pcmu))
 	packet.seqNum = 0;
@@ -56,7 +57,7 @@ Rtp::Rtp(std::vector<uint8_t> input)
 
 //----------------SETTERS + GETTERS----------------
 
-#if IS_BIG_ENDIAN
+#if true//IS_BIG_ENDIAN
 
 void Rtp::setVersion(int version)
 {
@@ -210,6 +211,7 @@ bool Rtp::getMarker() const
 }
 
 #endif
+
 //remove setters/getters below;
 
 void Rtp::setSeqNum(uint16_t seqNum)

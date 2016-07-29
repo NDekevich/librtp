@@ -6,14 +6,24 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
+void check(uint8_t c) {
+	if (c == 0x03)
+	{
+		std::cout << "ETX" << std::endl;
+	}
+	if (c == 0x00)
+	{
+		std::cout << "NULL" << std::endl;
+	}
+}
+
 #include "controlBlock.h"
-
-
 int main(int ac, char *av[]) {
 	try 
 	{
-		bool sender;
+		bool sender = true;
 		bool rs = false;
+		bool loop;
 		std::string ip = "127.0.0.1";
 		std::string file = "file.txt";
 		short port = 10001;
@@ -90,17 +100,34 @@ int main(int ac, char *av[]) {
 			}
 			(*cBlock.socketRtpMap[outS]).setSSRC(1001);
 			std::string text;
-
+			char c;
+			std::vector<uint8_t> data;
+			
 			std::ifstream myfile(file);
 			int i = 0;
+			int j = 0;
 			if (myfile.is_open())
 			{
-				while (std::getline(myfile, text))
+				while (myfile.get(c))
 				{
-					//std::cout << text << std::endl;
-					std::vector<uint8_t> data(text.begin(), text.begin() + text.size());
-					cBlock.sendRtpData(data, outS);
-					data.clear();
+				//	std::cout << c;
+					data.push_back(c);
+					if (c == 0x03)
+					{
+						std::cout << "ETX" << std::endl;
+					}
+					if (c == 0x00)
+					{
+						std::cout << "NULL" << std::endl;
+					}
+					if (j == 255) {
+						j = 0;
+						cBlock.sendRtpData(data, outS);
+						data.clear();
+					}
+					j++;
+					if (i % 100 == 0) std::cout << "sent : " << i << " packets"<<std::endl;
+					std::for_each(data.begin(), data.end(), check);
 					i++;
 				}
 				myfile.close();
@@ -194,3 +221,6 @@ int main(int ac, char *av[]) {
 		return 0;
 	}
 }
+
+
+

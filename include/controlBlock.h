@@ -121,10 +121,10 @@ public:
 			std::vector<uint8_t> v = *(*socketRtpMap[socket].get()).createRtpPacket();
 			(*socket).send(boost::asio::buffer(v));
 
-			convMember* convM = &(conversationMembers[((*socketRtpMap[socket].get()).getSSRC())]);
+			/*convMember* convM = &(conversationMembers[((*socketRtpMap[socket].get()).getSSRC())]);
 			(*convM).packetsSent++;
 			(*convM).octetsSent += v.size();
-			return true;
+			*/return true;
 		}
 		catch (std::exception& e)
 		{
