@@ -25,7 +25,7 @@ int main(int ac, char *av[]) {
 			("ip", po::value<std::string>(&ip), "ip address")
 			("port", po::value<short>(&port),"port number")
 			("f", po::value<std::string>(&file), "file")
-			("rs", "Print message on receiving a packet")
+			("rs", "Print receive statistics")
 			;
 
 		po::positional_options_description p;
@@ -111,9 +111,12 @@ int main(int ac, char *av[]) {
 		{
 			controlBlock cBlock;
 			uint32_t ssrc = 0;
-			rtp::Rtp::rtpPayloadTypes pt;
+			rtp::Rtp::rtpPayloadTypes pt = rtp::Rtp::rtpPayloadTypes::PCMU;
 			uint32_t packetsReceived = 0;
 			uint32_t seqNum = 0;
+			uint32_t timeStamp = 0;
+			uint32_t timeStampStep = 0;
+			bool timestampInit = true;
 			auto inS = cBlock.createInputSocket(port);
 			std::vector<uint8_t> data;
 			std::ofstream myfile(file);
@@ -128,11 +131,17 @@ int main(int ac, char *av[]) {
 						{
 							ssrc = (*cBlock.socketRtpMap[inS]).getSSRC();
 							std::cout << "new SSRC : " << ssrc << std::endl;
+							std::cout << "timestamp reseted " << ssrc << std::endl;
+							std::cout << "packets received reseted " << ssrc << std::endl;
+
+							timestampInit = true;
+							packetsReceived = 0;
 						}
 						if (pt != (*cBlock.socketRtpMap[inS]).getPayloadType()) 
 						{
 							pt = (*cBlock.socketRtpMap[inS]).getPayloadType();
 							std::cout << "new payload type :  " << pt << std::endl;
+							timestampInit = true;
 						}
 						packetsReceived++;
 						if (packetsReceived % 100 == 0) 
@@ -146,9 +155,31 @@ int main(int ac, char *av[]) {
 							
 						}
 						seqNum++;
+						if (timestampInit) {
+							if (timeStamp == 0) {
+								timeStamp = (*cBlock.socketRtpMap[inS]).getTimestamp();
+							}
+							else
+							{
+								timeStampStep = (*cBlock.socketRtpMap[inS]).getTimestamp() - timeStamp;
+								timestampInit = false;
+							}
+						}
+						else
+						{
+							if (timeStamp + timestampInit != (*cBlock.socketRtpMap[inS]).getTimestamp())
+							{
+								timeStamp = (*cBlock.socketRtpMap[inS]).getTimestamp();
+								std::cout << "timestamp changed !" << std::endl;
+							}
+							else
+							{
+								timeStamp = (*cBlock.socketRtpMap[inS]).getTimestamp();
+							}
+						}
+
 					}
 					//size_t len = cBlock.receiveRawData(&data, inS);	
-					myfile << "r: ";
 
 					std::ostream_iterator<uint8_t> output_iterator(myfile);
 					std::copy(data.begin(), data.end(), output_iterator);

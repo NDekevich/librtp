@@ -398,47 +398,54 @@ std::shared_ptr<std::vector<uint8_t>> Rtp::createRtpPacket() const
 
 void Rtp::setRtpPacket(std::vector<uint8_t> input)
 {
-	int position = 0;
-	packet.firstOctet = input[position];
-	position++;
-	packet.secondOctet = input[position];
-	position++;
-	uint16_t* ptr16 = (uint16_t*)(input.data()+position);
-	packet.seqNum = boost::endian::endian_reverse(*ptr16);
-	position += 2;
-	uint32_t* ptr32 = (uint32_t*)(input.data() + position);
-	packet.timeStamp = boost::endian::endian_reverse(*ptr32);
-	position += 4;
-	ptr32 = (uint32_t*)(input.data() + position);
-	packet.SSRC = boost::endian::endian_reverse(*ptr32);
+	try {
 
-	int cc = getCSRCcount();
-	CSRC.clear();
-
-	for (int i = 0; i < cc; i++) {
-		ptr32 = (uint32_t*)(input.data() + position);
-		CSRC.push_back(boost::endian::endian_reverse(*ptr32));
+		int position = 0;
+		packet.firstOctet = input[position];
+		position++;
+		packet.secondOctet = input[position];
+		position++;
+		uint16_t* ptr16 = (uint16_t*)(input.data() + position);
+		packet.seqNum = boost::endian::endian_reverse(*ptr16);
+		position += 2;
+		uint32_t* ptr32 = (uint32_t*)(input.data() + position);
+		packet.timeStamp = boost::endian::endian_reverse(*ptr32);
 		position += 4;
-	}
-	if (getExtension()) {
-		extensionNum = boost::endian::endian_reverse(*(uint16_t*)(input.data() + position));
-		position += 2;
-		extensionLength = boost::endian::endian_reverse(*(uint16_t*)(input.data() + position));
-		position += 2;
-		headerExtension.clear();
-		headerExtension.insert(headerExtension.begin(), (input.begin() + position), (input.begin() + position + extensionLength));
-		position += extensionLength;
-	}
-	payload.clear();
-	if (getPadding()) {
-		int paddingSize = *(input.end() - 1);
-		if ((input.begin() + position) > (input.end() - paddingSize)) {
-			payload.insert(payload.begin(), input.begin() + position, input.end() - paddingSize);
+		ptr32 = (uint32_t*)(input.data() + position);
+		packet.SSRC = boost::endian::endian_reverse(*ptr32);
+
+		int cc = getCSRCcount();
+		CSRC.clear();
+
+		for (int i = 0; i < cc; i++) {
+			ptr32 = (uint32_t*)(input.data() + position);
+			CSRC.push_back(boost::endian::endian_reverse(*ptr32));
+			position += 4;
+		}
+		if (getExtension()) {
+			extensionNum = boost::endian::endian_reverse(*(uint16_t*)(input.data() + position));
+			position += 2;
+			extensionLength = boost::endian::endian_reverse(*(uint16_t*)(input.data() + position));
+			position += 2;
+			headerExtension.clear();
+			headerExtension.insert(headerExtension.begin(), (input.begin() + position), (input.begin() + position + extensionLength));
+			position += extensionLength;
+		}
+		payload.clear();
+		if (getPadding()) {
+			int paddingSize = *(input.end() - 1);
+			if ((input.begin() + position) > (input.end() - paddingSize)) {
+				payload.insert(payload.begin(), input.begin() + position, input.end() - paddingSize);
+			}
+		}
+		else
+		{
+			payload.insert(payload.begin(), input.begin() + position, input.end());
 		}
 	}
-	else
+	catch (std::exception& e)
 	{
-		payload.insert(payload.begin(), input.begin() + position, input.end());
+		std::cerr << "Error rtp.cpp 1:" << e.what() << std::endl;
 	}
 }
 
