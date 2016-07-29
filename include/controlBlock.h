@@ -26,16 +26,16 @@ public:
 
 	//TEMPLATES ARE PLACEHOLDERS=d
 	void initializeOut();
-	
-	//void setSdesItems(rtcp::Rtcp::rtpSdesTypes type, std::string value);	
+
+	//void setSdesItems(rtcp::Rtcp::rtpSdesTypes type, std::string value);
 	void setRtpPrecodedFormat(int format);
 	void setRtpCoding(bool codingOn);
-	
+
 	void createConversationMembrer(uint32_t ssrc);
-	
+
 	uint32_t calculatePacketLoss();
 	uint32_t calculateRtcpInterval();
-	
+
 	uint8_t* decodeRtpPacket(uint8_t* packet);
 	void decodeRtcpPacket(uint8_t* packet);
 
@@ -83,7 +83,7 @@ public:
 	}
 
 	int receiveRtp_from(std::shared_ptr<boost::asio::ip::udp::socket> socket, short port) {
-		try 
+		try
 		{
 			(*socket).close();
 			(*socket).bind(boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port));
@@ -134,13 +134,13 @@ public:
 	}
 
 	template<typename D>
-	bool sendRtp_to(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket, std::string ip, short port) 
+	bool sendRtp_to(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket, std::string ip, short port)
 	{
-		try 
+		try
 		{
 			(*socket).close();
 			(*socket).bind(boost::asio::ip::udp::endpoint(ip, port));
-			return sendRtpData(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket)
+			return sendRtpData(data, socket);
 		}
 		catch (std::exception& e)
 		{
@@ -213,11 +213,11 @@ public:
 						conversationMembers[rb.ssrc].packetLostBySource = rb.packetsLost;
 						conversationMembers[rb.ssrc].highestSeqNumBySource = rb.highestSeqNum;
 						conversationMembers[rb.ssrc].jitterBySource = rb.interarrivalJitter;
-						conversationMembers[rb.ssrc].lastSRBySource = rb.lastSR;	
+						conversationMembers[rb.ssrc].lastSRBySource = rb.lastSR;
 						conversationMembers[rb.ssrc].delaySlsrBySource = rb.delaySinceLSR;
 					}
 					break;
-				case (202)://SourceDescriptionReport 
+				case (202)://SourceDescriptionReport
 					for (int i = 0; i < (*packet).getReportCount(); i++)
 					{
 						type = (*packet).getSdesItems()[i].rtpSdesType;
@@ -226,11 +226,11 @@ public:
 					break;
 				case (203)://GoodbyeReport
 					(*convM).leftConversation = true;
-					BOOST_FOREACH(uint32_t l , (*packet).otherLeavers) 
+					BOOST_FOREACH(uint32_t l , (*packet).otherLeavers)
 					{
 						(conversationMembers[l]).leftConversation = true;
 					}
-					if ((*packet).optGoodbyeText) 
+					if ((*packet).optGoodbyeText)
 					{
 						(*convM).leaveMsg.insert((*convM).leaveMsg.begin(), (*packet).goodbyeText.begin(), (*packet).goodbyeText.end());
 					}
@@ -277,7 +277,7 @@ public:
 			return -1;
 		}
 	}
-	
+
 
 	std::shared_ptr<boost::asio::ip::udp::socket> createOutputSocket(std::string ip, short port);
 	std::shared_ptr<boost::asio::ip::udp::socket> createInputSocket(short port);
@@ -297,7 +297,7 @@ public:
 
 private:
 	int rtpOffset;
-	
+
 	struct convMember {
 		//uint32_t ssrc;
 		uint32_t packetsSent;
@@ -330,7 +330,7 @@ private:
 
 		boost::asio::ip::udp::endpoint rtpPort;
 		boost::asio::ip::udp::endpoint rtcpPort;
-		
+
 		std::vector<std::string> sdesItems;
 		std::string leaveMsg;
 
@@ -338,7 +338,7 @@ private:
 	};
 
 
-	
+
 	struct outputInfo {
 		uint32_t ssrc;
 
@@ -355,12 +355,12 @@ private:
 		bool we_sent;
 		bool initial;
 		bool precoded = true;
-		
+
 		int precodedFormat = 0;
 
 		bool padding;
 		bool headerExt;
-		bool marker;		
+		bool marker;
 		std::string sdesInfo[14];
 
 		std::vector<std::string> sdesItems;
@@ -377,7 +377,7 @@ private:
 	std::unordered_map<uint32_t, convMember> conversationMembers;
 	int outputIdCount;
 	int inputIdCount;
-	
+
 	uint32_t generateSSRC();
 	void generateRtpTimestampOffset();
 	uint32_t getNtpTimestampS();
