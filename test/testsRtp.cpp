@@ -129,7 +129,7 @@ TEST(RtpTest, packetFormation)
 
 		std::shared_ptr<std::vector<uint8_t>> startpre = firstPacket.createRtpPacket();
 
-	/*	std::vector<uint8_t> start2 = *startpre;
+		std::vector<uint8_t> start2 = *startpre;
 		uint8_t* start = start2.data();
 
 
@@ -148,7 +148,7 @@ TEST(RtpTest, packetFormation)
 		ASSERT_EQ(*firstPacket.getPayload(), *secondPacket.getPayload()) << "payload";
 
 
-		*/
+		
 	}
 
 
@@ -162,9 +162,31 @@ TEST(RtcpTest, version) {
 	ASSERT_EQ(rtcpPacket.getVersion(), 3);
 }
 
-TEST(RtcpTest, setReportCount) {
+TEST(RtcpTest, setSeqNum) {
+	int t = 1000;
 
 
+	Rtcp rtcpPacket1;
+	rtcp::Rtcp::reportBlock rb;
+	rb.delaySinceLSR = 100;
+	rb.fractionLost = 0;
+	rb.highestSeqNum = t;
+	rb.interarrivalJitter = 1000;
+	rb.lastSR = 10000;
+	rb.packetsLost = 100000;
+	rb.ssrc = 1000000;
+	rtcpPacket1.addReportBlock(rb);
+	rtcpPacket1.setPayload(rtcpPacket1.ReceiverReport);
+
+	ASSERT_EQ(rtcpPacket1.reports[0].highestSeqNum, t);
+	rtcpPacket1.reports[0].highestSeqNum++;
+	Rtcp rtcpPacket2;
+	std::shared_ptr<std::vector<uint8_t>> s_ptr = rtcpPacket2.createRtcpPacket();
+	rtcpPacket2.setRtcpPacket(*s_ptr);
+	(rtcpPacket2.reports[0].highestSeqNum, t+1);
+	s_ptr = rtcpPacket2.createRtcpPacket();
+	rtcpPacket1.setRtcpPacket(*s_ptr);
+	ASSERT_EQ(rtcpPacket1.reports[0].highestSeqNum, t+1);
 
 }
 

@@ -7,16 +7,6 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-void check(uint8_t c) {
-	if (c == 0x03)
-	{
-		std::cout << "ETX" << std::endl;
-	}
-	if (c == 0x00)
-	{
-		std::cout << "NULL" << std::endl;
-	}
-}
 
 #include "controlBlock.h"
 int main(int ac, char *av[]) {
@@ -119,6 +109,7 @@ int main(int ac, char *av[]) {
 					if (j == 255) {
 						j = 0;
 						seqNum++;
+						std::cout << "SeqNum : " << seqNum<<std::endl;
 						timestamp += step;
 						(*cBlock.socketRtpMap[outS]).setSSRC(ssrc);
 						(*cBlock.socketRtpMap[outS]).setSeqNum(seqNum);
@@ -128,7 +119,6 @@ int main(int ac, char *av[]) {
 						Sleep(5);
 						i++;
 						if (i % 100 == 0) std::cout << "sent : " << i << " packets" << std::endl;
-						//std::for_each(data.begin(), data.end(), check);
 					}
 					else {
 						j++;
