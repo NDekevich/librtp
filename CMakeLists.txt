@@ -8,9 +8,15 @@ set(GLOBAL PROPERTY USE_FOLDERS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_LIBS ON)
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
+include(ExtProjectUtils)
+
 find_package(Threads REQUIRED)
 find_package(Boost 1.58.0 REQUIRED
     COMPONENTS system date_time regex program_options)
+
+ExtProjectGit("https://github.com/miseri/opus-1.1-CMake.git" "master" "${CMAKE_BINARY_DIR}/deps")
 
 set(SRC_FILES
     src/rtp.cpp
