@@ -1,4 +1,7 @@
 //#pragma once
+//#pragma pack(1)
+
+
 #include <bitset>
 #include <stdint.h>
 #include <memory>
@@ -100,7 +103,7 @@ namespace rtp
 		void setExtensionNum(uint16_t num);
 		uint16_t getExtensionNum() const { return extensionNum; }
 
-		void Rtp::setHeaderExtension(std::vector<uint8_t> ext);
+		void setHeaderExtension(std::vector<uint8_t> ext);
 
 
 		bool addCSRC(uint32_t);

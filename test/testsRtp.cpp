@@ -1,21 +1,32 @@
 // testsRtp.cpp : Defines the entry point for the console application.
 //
+/*
 
+CHECK PRAGMA PACK
+
+
+
+*/
+//#pragma pack(1)
+
+
+#pragma once
 
 #include "controlBlock.h"
 #include <gtest/gtest.h>
 #include <fstream>
 
 //RTP	
+
 using namespace rtp;
 
 TEST(RtpTest, versionTest)
 	{
 		Rtp testPacket;
 		ASSERT_EQ(testPacket.getVersion(), 2) << "Starting";
+		
 		testPacket.setVersion(1);
 		ASSERT_EQ(testPacket.getVersion(), 1) << "Changed";
-		;
 	}
 
 TEST(RtpTest, paddingTest)
@@ -94,23 +105,19 @@ TEST(RtpTest, CSRC)
 
 	}
 
-
-TEST(RtpTest, packetFormation) {
-
-
-
-
-
-		Rtp firstPacket;
+TEST(RtpTest, packetFormation) 
+{
+	
+	Rtp firstPacket;
 		firstPacket.setMarker(true);
 		firstPacket.setExtension(true);
-		firstPacket.setExtensionNum(123321);
+		firstPacket.setExtensionNum(1221);
 		std::vector<uint8_t> headerExt = { 'a','b','c','d','e','f' };
 		firstPacket.setExtensionLength(6);
 		firstPacket.setHeaderExtension(headerExt);
 		firstPacket.addCSRC(320013);
 		firstPacket.addCSRC(124312);
-		firstPacket.setSeqNum(980321);
+		firstPacket.setSeqNum(9821);
 		firstPacket.setPayloadType(firstPacket.PCMU);
 		firstPacket.setTimestamp(121533);
 		firstPacket.setSSRC(135315);
@@ -141,8 +148,9 @@ TEST(RtpTest, packetFormation) {
 		ASSERT_EQ(*firstPacket.getPayload(), *secondPacket.getPayload()) << "payload";
 
 
-
+		
 	}
+
 
 //RTCP
 using namespace rtcp;
@@ -154,10 +162,31 @@ TEST(RtcpTest, version) {
 	ASSERT_EQ(rtcpPacket.getVersion(), 3);
 }
 
+TEST(RtcpTest, setSeqNum) {
+	int t = 1000;
 
-TEST(RtcpTest, setReportCount) {
 
+	Rtcp rtcpPacket1;
+	rtcp::Rtcp::reportBlock rb;
+	rb.delaySinceLSR = 100;
+	rb.fractionLost = 0;
+	rb.highestSeqNum = t;
+	rb.interarrivalJitter = 1000;
+	rb.lastSR = 10000;
+	rb.packetsLost = 100000;
+	rb.ssrc = 1000000;
+	rtcpPacket1.addReportBlock(rb);
+	rtcpPacket1.setPayload(rtcpPacket1.ReceiverReport);
 
+	ASSERT_EQ(rtcpPacket1.reports[0].highestSeqNum, t);
+	rtcpPacket1.reports[0].highestSeqNum++;
+	Rtcp rtcpPacket2;
+	std::shared_ptr<std::vector<uint8_t>> s_ptr = rtcpPacket2.createRtcpPacket();
+	rtcpPacket2.setRtcpPacket(*s_ptr);
+	(rtcpPacket2.reports[0].highestSeqNum, t+1);
+	s_ptr = rtcpPacket2.createRtcpPacket();
+	rtcpPacket1.setRtcpPacket(*s_ptr);
+	ASSERT_EQ(rtcpPacket1.reports[0].highestSeqNum, t+1);
 
 }
 
@@ -188,7 +217,7 @@ TEST(RtcpTest, senderReportFormation) {
 
 	rtcpPacket1.setHeaderSSRC(1);
 	rtcpPacket1.setReportCount(0);
-	rtcpPacket1.setHeaderLength(100);
+	rtcpPacket1.setHeaderLength(6);
 	rtcpPacket1.senderReport.rtpTimestamp = 3;
 	rtcpPacket1.senderReport.ntpFractionTimestamp = 1;
 	rtcpPacket1.senderReport.ntpSecondsTimestamp = 2;
@@ -231,7 +260,7 @@ TEST(RtcpTest, senderReportFormation) {
 	rtcpPacket2.setRtcpPacket(start2);
 
 	/*
-	ASSERT_EQ(*start, 134) << "vvpxcc";
+	ASSERT_EQ(*start, 131) << "vvpxcc";
 	std::cout << (int)(*start) << std::endl;
 	start++;
 	ASSERT_EQ(*start, 200) << "pt";
@@ -465,17 +494,25 @@ TEST(RtcpTest, goodbyeFormation) {
 
 //control block;
 
-TEST(control_block, rtpPacket) {
+TEST(control_block_test, rtpPacket_test) {
 	controlBlock cBlock;
 	std::string ip = "127.0.0.1";
 	short port = 30000;
+
 	std::shared_ptr<boost::asio::ip::udp::socket> outS = cBlock.createOutputSocket(ip, port);
+
+	
 	cBlock.createRtpVal(outS);
 
+	//ASSERT_TRUE(false);
 
 	std::shared_ptr<boost::asio::ip::udp::socket> inS = cBlock.createInputSocket(port);
-	//cBlock.createRtpVal(inS);
+	
+	cBlock.createRtpVal(inS);
 
+	std::vector<uint8_t> dataP = { 'a','b','c','d' };
+		
+	
 	(*cBlock.socketRtpMap[outS]).setMarker(true);
 	(*cBlock.socketRtpMap[outS]).setExtension(true);
 	(*cBlock.socketRtpMap[outS]).setExtensionNum(200);
@@ -488,30 +525,27 @@ TEST(control_block, rtpPacket) {
 	(*cBlock.socketRtpMap[outS]).setPayloadType((*cBlock.socketRtpMap[outS]).PCMU);
 	(*cBlock.socketRtpMap[outS]).setTimestamp(0);
 	(*cBlock.socketRtpMap[outS]).setSSRC(1);
-	std::vector<uint8_t> dataP = { 'a','b','c','d'};
 	(*cBlock.socketRtpMap[outS]).setSizeofPayload(4);
 	(*cBlock.socketRtpMap[outS]).setPayload(dataP);
-
+	
 
 	std::vector<uint8_t> v = *(*cBlock.socketRtpMap[outS]).createRtpPacket();
 	std::vector<char> outArray (v.begin(),v.end());
 
-
 	cBlock.sendRtpData(dataP, outS);
-	//cBlock.sendRawData(&outArray, outS);
-
 	(*cBlock.socketRtpMap[outS]).setMarker(false);
 	cBlock.sendRtpData(dataP, outS);
-
-
+/*
 	std::vector<uint8_t> inArray;
 	inArray.resize(2048);
 	//boost::asio::ip::udp::endpoint ep(boost::asio::ip::address::from_string(ip), port);
-
 	cBlock.receiveRtpData(inS);
 	rtp::Rtp secondPacket(*cBlock.socketRtpMap[inS]);
+		
+	
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getVersion(), secondPacket.getVersion()) << "version";
-	//ASSERT_EQ((*cBlock.socketRtpMap[outS]).getMarker(), secondPacket.getMarker()) << "version";
+	
+	//ASSERT_TRUE(secondPacket.getMarker()) << "marker";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRCcount(), secondPacket.getCSRCcount()) << "Count";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRC()[0], secondPacket.getCSRC()[0]) << "CSRC_0";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRC()[1], secondPacket.getCSRC()[1]) << "CSRC_1";
@@ -523,10 +557,12 @@ TEST(control_block, rtpPacket) {
 	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getHeaderExtension(), *secondPacket.getHeaderExtension()) << "Header Extension";
 
 	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getPayload(), *secondPacket.getPayload()) << "payload";
-
 	
+
+
 	cBlock.receiveRtpData(inS);
 	rtp::Rtp thirdPacket(*cBlock.socketRtpMap[inS]);
+	
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getVersion(), thirdPacket.getVersion()) << "version";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getMarker(), thirdPacket.getMarker()) << "version";
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getCSRCcount(), thirdPacket.getCSRCcount()) << "Count";
@@ -538,7 +574,12 @@ TEST(control_block, rtpPacket) {
 	ASSERT_EQ((*cBlock.socketRtpMap[outS]).getSSRC(), thirdPacket.getSSRC()) << "SSRC";
 	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getHeaderExtension(), *thirdPacket.getHeaderExtension()) << "Header Extension";
 	ASSERT_EQ(*(*cBlock.socketRtpMap[outS]).getPayload(), *thirdPacket.getPayload()) << "payload";
-
+	
+	/*
+	std::cout << "marker1 is : " << (*cBlock.socketRtpMap[outS]).getMarker() << std::endl;
+	std::cout << "marker2 is : " << secondPacket.getMarker() << std::endl;
+	std::cout << "marker3 is : " << thirdPacket.getMarker() << std::endl;
+	*/
 }
 
 TEST(control_block, rtcpPacket) {
@@ -577,7 +618,7 @@ TEST(control_block, rtcpPacket) {
 	rtcpLen = cBlock.receiveRtcpData(inS);
 	
 	if (rtcpLen > 0) {
-		rtcp:Rtcp secondPacket(*cBlock.socketRtcpMap[inS]);	
+		Rtcp secondPacket(*cBlock.socketRtcpMap[inS]);	
 		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).getVersion(), secondPacket.getVersion());
 		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).getPayload(), secondPacket.getPayload());
 		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.ntpFractionTimestamp, secondPacket.senderReport.ntpFractionTimestamp);
@@ -602,7 +643,6 @@ TEST(control_block, rtcpPacket) {
 		ASSERT_EQ((*cBlock.socketRtcpMap[outS]).senderReport.rtpTimestamp, secondPacket.senderReport.rtpTimestamp);
 	}
 }
-
 
 
 

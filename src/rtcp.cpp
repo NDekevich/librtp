@@ -4,20 +4,24 @@
 using namespace rtcp;
 Rtcp::Rtcp()
 {
+//#if IS_BIG_ENDIAN
 	header.firstOctet = 0b10000000;
+//#else
+	//header.firstOctet = 0b00000010;
+//#endif
 	header.payloadType = 0;
+	header.length = 0;
 }
 
 
 Rtcp::~Rtcp()
 {
 }
-
+//#if IS_BIG_ENDIAN
 void Rtcp::setVersion(int version)
 {
 	header.firstOctet = (header.firstOctet & 0x3F) + (version << 6); //0b00111111 
 }
-
 int Rtcp::getVersion() const
 {
 	return (header.firstOctet & 0xC0) >> 6;  //0b11000000
@@ -32,7 +36,6 @@ void Rtcp::setPadding(bool padding)
 		header.firstOctet &= 0xDF; //0b11011111
 	}
 }
-
 bool  Rtcp::getPadding() const
 {
 	return ((header.firstOctet & 0x20) >> 5) == 1; //0b00100000
@@ -42,12 +45,46 @@ void Rtcp::setReportCount(int rc)
 {
 	header.firstOctet = (header.firstOctet & 0xE0) + rc; //0b11100000
 }
-
 int Rtcp::getReportCount()
 {
 	return (header.firstOctet & 0x1F);//0b00011111
 }
+/*
+#else
 
+void Rtcp::setReportCount(int rc)
+{
+	header.firstOctet = (header.firstOctet & 0b00000111) + (rc << 3);
+}
+int Rtcp::getReportCount()
+{
+	return (header.firstOctet & 0b11111000)>>3;
+}
+
+void Rtcp::setPadding(bool padding)
+{
+	if (padding) {
+		header.firstOctet |= 0b00000100; //0b00100000
+	}
+	else {
+		header.firstOctet &= 0b11111011; //0b11011111
+	}
+}
+bool  Rtcp::getPadding() const
+{
+	return ((header.firstOctet & 0b00000100) >>2) == 1; //0b00100000
+}
+
+void Rtcp::setVersion(int version)
+{
+	header.firstOctet = (header.firstOctet & 0b11111100) + (version); //0b00111111 
+}
+int Rtcp::getVersion() const
+{
+	return (header.firstOctet & 0b00000011);  //0b11000000
+}	
+#endif
+*/
 void Rtcp::setPayload(rtcpPayloadTypes pc)
 {
 	header.payloadType = (int)pc;
@@ -123,36 +160,6 @@ void Rtcp::addGoodbyeText(std::string text)
 	}
 	goodbyeTextLength = goodbyeText.length();
 	optGoodbyeText = true;
-}
-
-uint16_t rtcp::Rtcp::calculateHeaderLength()
-{
-	int length = 1;
-	switch (getPayload())
-	{
-	case SenderReport:
-		length +=6;
-	case ReceiverReport:
-		length += 1 + reportCount * 6;
-		break;
-	case SourceDescription:
-		for (int i = 0; i < sdesCount; i++) {
-			length += (items[i].itemLength / 4);
-		}
-		break;
-	case Goodbye:
-		length += otherLeavers.size();
-		length += optGoodbyeText ? ((1 + goodbyeTextLength) / 4) : 0;
-		break;
-	case AppDef:
-		length = 0;
-		break;
-	default:
-		length = 0;
-		break;
-
-		return length;
-	}
 }
 
 bool Rtcp::validateHeader()
