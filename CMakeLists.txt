@@ -16,7 +16,7 @@ find_package(Threads REQUIRED)
 find_package(Boost 1.58.0 REQUIRED
     COMPONENTS system date_time regex program_options)
 
-ExtProjectGit("https://github.com/miseri/opus-1.1-CMake.git" "master" "${CMAKE_BINARY_DIR}/deps")
+ExtProjectGit("https://github.com/snikulov/opus-1.1-CMake.git" "cmake_install" "${CMAKE_BINARY_DIR}/deps")
 
 set(SRC_FILES
     src/rtp.cpp
