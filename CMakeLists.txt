@@ -22,16 +22,22 @@ set(SRC_FILES
     src/rtp.cpp
     src/rtcp.cpp
     src/controlBlock.cpp
+    src/opusInterface.cpp
     )
 
 set(HDR_FILES
     include/controlBlock.h
     include/rtp.h
     include/rtcp.h
+    include/codecInterface.h
     )
 
+
 add_library(${PROJECT_NAME} STATIC ${SRC_FILES} ${HDR_FILES})
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/deps include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR} include)
+
 
 include(CTest)
 if(BUILD_TESTING)

@@ -1,19 +1,22 @@
 #include <stdint.h>
+#include <unordered_map>
 
-
-class codecRtpAsio 
+class codecInterface
 {
 	public :
-		
-
-		virtual int getCodecCode() = 0;
-
-		virtual uint8_t code(uint8_t rawData) = 0;
-		virtual uint8_t decode(uint8_t codedData) = 0;
+		codecInterface();
+		virtual ~codecInterface();
 
 
+		virtual void initialize();
+		virtual int getCodecCode();
 
-	private :
+		virtual uint8_t code(uint8_t rawData);
+		virtual uint8_t decode(uint8_t codedData);
+		 
+
+
+		std::unordered_map < std::string, int > settings;
 		const int codecCode;
 
 

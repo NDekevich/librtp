@@ -45,6 +45,7 @@ public:
 
 	int receiveRtpData(std::shared_ptr <boost::asio::ip::udp::socket> socket) {
 		try {
+			
 			if (socketRtpMap[socket] == nullptr) {
 				if (!(createRtpVal(socket))) {
 					std::cerr << "Could not create rtp receiver\n\n";
