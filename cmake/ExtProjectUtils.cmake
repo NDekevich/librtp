@@ -31,7 +31,7 @@ function(ExtProjectGit repourl tag destination)
 
     message(STATUS "ARGS for ExternalProject_Add(${name}): ${cmake_cli_args}")
 
-    ExternalProject_Add(${_name}
+    ExternalProject_Add(opus
         GIT_REPOSITORY ${repourl}
         GIT_TAG ${tag}
         CMAKE_ARGS ${cmake_cli_args}

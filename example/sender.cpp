@@ -3,8 +3,10 @@
 #include <fstream>
 #include <string>
 #include <stdlib.h>
+#define WIN32_LEAN_AND_MEAN
 
-
+#include <Windows.h>
+#include <mmsystem.h>
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
@@ -18,7 +20,7 @@ int main(int ac, char *av[]) {
 		bool loop;
 		std::string ip = "127.0.0.1";
 		std::string file = "file.txt";
-		short port = 10001;
+		short port = 10002;
 		po::options_description desc("Allowed options");
 		desc.add_options()
 			("help", "produce help message")
@@ -84,7 +86,10 @@ int main(int ac, char *av[]) {
 
 
 		if (sender) {
+
 			controlBlock cBlock;
+			cBlock.setRtpPrecodedFormat(75);
+			cBlock.setRtpCoding(true);
 			uint32_t timestamp = 1123320;
 			uint32_t step = 20;
 			uint16_t seqNum = 1000;
@@ -95,40 +100,77 @@ int main(int ac, char *av[]) {
 				return -1;
 			}
 			std::string text;
-			char c;
-			std::vector<uint8_t> data;
+
+
+/*
+
+
+
+
+			WAVEFORMATEX wfx = {};
+			wfx.wFormatTag = WAVE_FORMAT_PCM;       // PCM is standard
+			wfx.nChannels = 1;                      // 2 channels = stereo sound
+			wfx.nSamplesPerSec = 48000;             // Samplerate.  44100 Hz
+			wfx.wBitsPerSample = 16;                // 16 bit samples
 			
-			std::ifstream myfile;
-			myfile.open(file, std::ios::binary);
-			int i = 0;
-			int j = 0;
-			if (myfile.is_open())
+			wfx.nBlockAlign = wfx.wBitsPerSample * wfx.nChannels / 8;
+			wfx.nAvgBytesPerSec = wfx.nBlockAlign * wfx.nSamplesPerSec;
+			
+			
+			HWAVEIN wi;
+			waveInOpen(&wi,            // fill our 'wi' handle
+				WAVE_MAPPER,    // use default device (easiest)
+				&wfx,           // tell it our format
+				NULL, NULL,      // we don't need a callback for this example
+				CALLBACK_NULL | WAVE_FORMAT_DIRECT   // tell it we do not need a callback
+			);
+			
+			char buffers[2][48000 * 1* 2 / 50];
+			
+			WAVEHDR headers[2] = { {},{} };
+
+			for (int i = 0; i < 2; ++i)
 			{
-				while (myfile.get(c))
+				headers[i].lpData = buffers[i];             
+				headers[i].dwBufferLength = 48000 * 1 * 2 / 50;      // tell it the size of that buffer in bytes
+										// Prepare each header
+				waveInPrepareHeader(wi, &headers[i], sizeof(headers[i]));
+				// And add it to the queue
+				//  Once we start recording, queued buffers will get filled with audio data
+				waveInAddBuffer(wi, &headers[i], sizeof(headers[i]));
+			}
+			waveInStart(wi);
+			int i = 0;
+
+			while (!(GetAsyncKeyState(VK_ESCAPE) & 0x8000)) {
+			
+				for (auto& h : headers)      // check each header
 				{
-					data.push_back(c);
-					if (j == 255) {
-						j = 0;
+					if (h.dwFlags & WHDR_DONE)           // is this header done?
+					{
+						// if yes, dump it to our file
 						seqNum++;
-						std::cout << "SeqNum : " << seqNum<<std::endl;
+						std::cout << "SeqNum : " << seqNum << std::endl;
 						timestamp += step;
 						(*cBlock.socketRtpMap[outS]).setSSRC(ssrc);
 						(*cBlock.socketRtpMap[outS]).setSeqNum(seqNum);
 						(*cBlock.socketRtpMap[outS]).setTimestamp(timestamp);
-						cBlock.sendRtpData(data, outS);
-						data.clear();				
-						Sleep(5);
+						cBlock.sendRtpData(h.lpData, outS);
+						
 						i++;
 						if (i % 100 == 0) std::cout << "sent : " << i << " packets" << std::endl;
-					}
-					else {
-						j++;
+						
+						// then re-add it to the queue
+						h.dwFlags = 0;          // clear the 'done' flag
+						h.dwBytesRecorded = 0;  // tell it no bytes have been recorded
+
+												// re-add it  (I don't know why you need to prepare it again though...)
+						waveInPrepareHeader(wi, &h, sizeof(h));
+						waveInAddBuffer(wi, &h, sizeof(h));
 					}
 				}
-				std::cout << "total packets sent : " << i << std::endl;
-				myfile.close();
 			}
-			return 1;
+			*/		
 		}
 		else
 		{

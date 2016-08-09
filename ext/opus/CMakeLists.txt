@@ -7,7 +7,9 @@ ExternalProject_Add(opus
     CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
                -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
                -DCMAKE_CXX_FLAGS=${MSVC_COMPILER_DEFS}
-     PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
+    PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
+    
+    
 )
 
 ExternalProject_Get_Property(opus source_dir)

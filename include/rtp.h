@@ -52,6 +52,8 @@ namespace rtp
 			MP2T = 33,
 			H263 = 34,
 
+			OPUS = 75,
+
 			MaxRtpPayload = 127
 		};
 

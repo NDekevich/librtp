@@ -343,7 +343,6 @@ std::shared_ptr<std::vector<uint8_t>> createRtcpPacket() {
 bool setRtcpPacket(std::vector<uint8_t> inPacket) {
 	try {
 		int position = 0;
-		senderInfo* ptr;
 		reportBlock rb;
 		std::vector<char> v;
 		uint16_t temp16;
