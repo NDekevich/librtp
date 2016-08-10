@@ -1,12 +1,15 @@
 #pragma once
 #include "codecInterface.h"
 #include "unordered_map"
-#include <../build/deps/include/opus.h>
+#include "../build/deps/include/opus.h"
 #include <boost/any.hpp>
+
+//TODO Opus decoding + interface + sender Audio playback + documentation
 
 class opusInterface //: public codecInterface
 {
 public:
+	opusInterface();
 	opusInterface(std::unordered_map<std::string, int> sets);
 	~opusInterface();
 
@@ -24,9 +27,9 @@ public:
 	virtual int decoderFunction(std::vector<boost::any> arguments);
 
 
-	std::vector<uint8_t> code(std::vector<uint8_t>);
+	int code(std::vector<uint8_t>* data);
 
-	std::vector<uint8_t> decode(std::vector<uint8_t>);
+	int decode(std::vector<uint8_t>* data);
 
 	std::unordered_map<std::string, int> settings;
 	OpusEncoder* encoder;

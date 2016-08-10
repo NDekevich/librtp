@@ -10,7 +10,7 @@ class codecInterface
 public:
 	codecInterface();
 	codecInterface(std::unordered_map<std::string, int> sets);
-	virtual ~codecInterface();
+	~codecInterface();
 
 	virtual int createEncoder();
 	virtual int createDecoder();
@@ -18,7 +18,7 @@ public:
 	virtual int destroyEncoder();
 	virtual int destroyDecoder();
 
-	virtual void voidFunc() = 0;
+	//virtual void voidFunc() = 0;
 
 	virtual void initialize();
 	virtual int getCodecType();

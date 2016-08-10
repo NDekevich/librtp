@@ -3,11 +3,12 @@
 #include <fstream>
 #include <string>
 #include <stdlib.h>
-#define WIN32_LEAN_AND_MEAN
-
+#define _WINSOCKAPI_
 #include <Windows.h>
+#undef _WINSOCKAPI_
 #include <mmsystem.h>
 #include <boost/program_options.hpp>
+//#include <../build/deps/include/opus.h>
 namespace po = boost::program_options;
 
 
@@ -17,13 +18,13 @@ int main(int ac, char *av[]) {
 	{
 		bool sender = true;
 		bool rs = false;
-		bool loop;
 		std::string ip = "127.0.0.1";
 		std::string file = "file.txt";
 		short port = 10002;
 		po::options_description desc("Allowed options");
 		desc.add_options()
 			("help", "produce help message")
+
 			("s", "send packets to specified adress")
 			("r", "receive from specified port")
 			("ip", po::value<std::string>(&ip), "ip address")
@@ -89,7 +90,7 @@ int main(int ac, char *av[]) {
 
 			controlBlock cBlock;
 			cBlock.setRtpPrecodedFormat(75);
-			cBlock.setRtpCoding(true);
+			cBlock.setRtpCoding(false);
 			uint32_t timestamp = 1123320;
 			uint32_t step = 20;
 			uint16_t seqNum = 1000;
@@ -101,15 +102,17 @@ int main(int ac, char *av[]) {
 			}
 			std::string text;
 
+			std::vector<uint8_t> test = { 1,2,3,4,5,6,7 };
+			cBlock.sendRtpData(test,outS);
 
-/*
 
+			
 
 
 
 			WAVEFORMATEX wfx = {};
 			wfx.wFormatTag = WAVE_FORMAT_PCM;       // PCM is standard
-			wfx.nChannels = 1;                      // 2 channels = stereo sound
+			wfx.nChannels = 1;                      // 1 channels = stereo sound
 			wfx.nSamplesPerSec = 48000;             // Samplerate.  44100 Hz
 			wfx.wBitsPerSample = 16;                // 16 bit samples
 			
@@ -125,14 +128,14 @@ int main(int ac, char *av[]) {
 				CALLBACK_NULL | WAVE_FORMAT_DIRECT   // tell it we do not need a callback
 			);
 			
-			char buffers[2][48000 * 1* 2 / 50];
+			char buffers[2][48000 * 1* 2 / 20];
 			
 			WAVEHDR headers[2] = { {},{} };
 
 			for (int i = 0; i < 2; ++i)
 			{
 				headers[i].lpData = buffers[i];             
-				headers[i].dwBufferLength = 48000 * 1 * 2 / 50;      // tell it the size of that buffer in bytes
+				headers[i].dwBufferLength = 48000 * 1 * 2 / 20;      // tell it the size of that buffer in bytes
 										// Prepare each header
 				waveInPrepareHeader(wi, &headers[i], sizeof(headers[i]));
 				// And add it to the queue
@@ -155,7 +158,10 @@ int main(int ac, char *av[]) {
 						(*cBlock.socketRtpMap[outS]).setSSRC(ssrc);
 						(*cBlock.socketRtpMap[outS]).setSeqNum(seqNum);
 						(*cBlock.socketRtpMap[outS]).setTimestamp(timestamp);
-						cBlock.sendRtpData(h.lpData, outS);
+						std::vector<uint8_t> data;
+						data.insert(data.begin(), h.lpData, h.lpData +  h.dwBufferLength);
+
+						cBlock.sendRtpData(data, outS);
 						
 						i++;
 						if (i % 100 == 0) std::cout << "sent : " << i << " packets" << std::endl;
@@ -170,7 +176,7 @@ int main(int ac, char *av[]) {
 					}
 				}
 			}
-			*/		
+				
 		}
 		else
 		{
@@ -184,13 +190,30 @@ int main(int ac, char *av[]) {
 			bool timestampInit = true;
 			auto inS = cBlock.createInputSocket(port);
 			std::vector<uint8_t> data;
-			std::ofstream myfile;
-			myfile.open(file, std::ios::binary);
-			if (myfile.is_open())
-			{
+			HWAVEOUT hWaveOut;
+			WAVEFORMATEX wfx;
+			MMRESULT result;
+
+			wfx.nSamplesPerSec = 48000;
+			wfx.wBitsPerSample = 16;
+			wfx.nChannels = 1;
+
+			wfx.wFormatTag = WAVE_FORMAT_PCM;
+			wfx.nBlockAlign = (wfx.wBitsPerSample >> 3) * wfx.nChannels;
+			wfx.nAvgBytesPerSec = wfx.nBlockAlign * wfx.nSamplesPerSec;
+
+			waveOutOpen(
+				&hWaveOut,
+				WAVE_MAPPER,
+				&wfx,
+				0,
+				0,
+				CALLBACK_NULL
+			);
+
 				for (;;) {
 					size_t len = cBlock.receiveRtpData(inS);	
-					std::vector<uint8_t> data = *(*cBlock.socketRtpMap[inS]).getPayload();
+					data = *(*cBlock.socketRtpMap[inS]).getPayload();
 					if (rs) {
 					
 						if (ssrc != (*cBlock.socketRtpMap[inS]).getSSRC()) 
@@ -247,11 +270,7 @@ int main(int ac, char *av[]) {
 					}
 					//size_t len = cBlock.receiveRawData(&data, inS);	
 
-					std::ostream_iterator<uint8_t> output_iterator(myfile);
-					std::copy(data.begin(), data.end(), output_iterator);
 				}
-				myfile.close();
-			}
 			return packetsReceived;
 		} 
 	}

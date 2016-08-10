@@ -12,6 +12,7 @@
 #include "codecInterface.h"
 #include "opusInterface.h"
 
+#include <../build/deps/include/opus.h>
 
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
@@ -109,8 +110,9 @@ public:
 	}
 
 
-	template<typename D>
-	int sendRtpData(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket) {
+	//template<typename D>
+	//int sendRtpData(D data, std::shared_ptr<boost::asio::ip::udp::socket> socket) {
+	int sendRtpData(std::vector<uint8_t> data, std::shared_ptr<boost::asio::ip::udp::socket> socket) {
 		try {
 			int size;
 			if (socketRtpMap[socket] == nullptr) {
@@ -121,7 +123,7 @@ public:
 			}
 			if (outInfo.precoded)
 			{
-				(*socketRtpMap[socket].get()).setPayloadType((rtp::Rtp::rtpPayloadTypes)outInfo.precodedFormat);
+				(*socketRtpMap[socket].get()).setPayloadType((rtp::Rtp::rtpPayloadTypes)(rtp::Rtp::rtpPayloadTypes)outInfo.precodedFormat);
 				(*socketRtpMap[socket].get()).setPayload(data);
 				size =  data.size();
 			}
@@ -130,41 +132,15 @@ public:
 				std::unordered_map<std::string, int> tempMap;
 				tempMap["fs"] = 48000;
 				tempMap["channels"] = 1;
-				tempMap["applications"] = OPUS_APPLICATION_VOIP;
+				tempMap["applications"] = 2048;
+				tempMap["frame_size"] = 20;
+				tempMap["max_data_size"] = 480 * 20;
 				opusInterface opusC(tempMap);
 				opus_encoder_ctl(opusC.encoder, OPUS_SET_COMPLEXITY(5), OPUS_SET_BITRATE(OPUS_AUTO), OPUS_SET_MAX_BANDWIDTH(OPUS_BANDWIDTH_FULLBAND));
-				std::vector<uint16_t> data2;
-				for (int i = 0; i++; i < data.size()) {
-					data2[i / 2] = (data2[i / 2] << 8) + data[i];
-				}
 
-				int len = opus_encode(opusC.encoder, (opus_int16*)data2.data(), 20, data.data(), 480*20);
-				std::vector<uint8_t>data3(data.begin(), data.begin() + len);
-				//opus_int16*: Input signal (interleaved if 2 channels). length is frame_size*channels*sizeof(opus_int16)  = 20*1*2
-				/*
-				int encoder_error = 0;
-				(*socketRtpMap[socket].get()).setPayloadType(75);
-				auto encoder = opus_encoder_create(48000, 1, OPUS_APPLICATION_AUDIO, &encoder_error);
-				opus_encoder_ctl(&encoder, OPUS_SET_COMPLEXITY(5), OPUS_SET_BITRATE(OPUS_AUTO), OPUS_SET_MAX_BANDWIDTH(OPUS_BANDWIDTH_FULLBAND));
-
-				std::vector<uint8_t> data2();
-				uint16_t temp = 0;
-				int place = 0;
-
-				for (int it1 = 0; it1 < data.size()/2; it1++) {
-					temp = data[place] << 8;
-					place++;
-					temp = data[place] << 8;
-					place++;
-					data2.pushback(temp);
-					temp = 0;
-				}
+				int len = opusC.code(&data);
 				
-				size = opus_encode(&encoder, data2.data(), 480, data.data(); 480*20*1);
-				*/
-				(*socketRtpMap[socket].get()).setPayload(data3);
-				// ADD CODE FOR CODING DATA;
-				//
+				(*socketRtpMap[socket].get()).setPayload(data);
 			}
 			//(*socketRtpMap[socket].get()).setTimestamp(currentRtpTime());
 			std::vector<uint8_t> v = *(*socketRtpMap[socket].get()).createRtpPacket();

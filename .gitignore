@@ -1,3 +1,4 @@
 build/
 buildMGW/
 *.TMP
+build64/
