@@ -8,7 +8,9 @@
 #undef _WINSOCKAPI_
 #include <mmsystem.h>
 #include <boost/program_options.hpp>
+
 //#include <../build/deps/include/opus.h>
+
 namespace po = boost::program_options;
 
 
@@ -190,6 +192,8 @@ int main(int ac, char *av[]) {
 			bool timestampInit = true;
 			auto inS = cBlock.createInputSocket(port);
 			std::vector<uint8_t> data;
+			
+		
 			HWAVEOUT hWaveOut;
 			WAVEFORMATEX wfx;
 			MMRESULT result;
@@ -210,7 +214,7 @@ int main(int ac, char *av[]) {
 				0,
 				CALLBACK_NULL
 			);
-
+		
 				for (;;) {
 					size_t len = cBlock.receiveRtpData(inS);	
 					data = *(*cBlock.socketRtpMap[inS]).getPayload();

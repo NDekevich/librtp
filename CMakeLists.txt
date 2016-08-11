@@ -18,6 +18,10 @@ find_package(Boost 1.58.0 REQUIRED
 
 ExtProjectGit("https://github.com/snikulov/opus-1.1-CMake.git" "cmake_install" "${CMAKE_BINARY_DIR}/deps/")
 
+include_directories(${DEPS_LOCATION}/include)
+link_directories(${DEPS_LOCATION}/lib)
+
+
 set(SRC_FILES
     src/rtp.cpp
     src/rtcp.cpp
@@ -36,19 +40,30 @@ set(HDR_FILES
 
 add_library(${PROJECT_NAME} STATIC ${SRC_FILES} ${HDR_FILES})
 
-FIND_LIBRARY(OPUS NAMES "opus" "celt" "silk_common" "silk_fixed" "silk_float"
-  PATHS ${CMAKE_BINARY_DIR}/deps/)
+add_dependencies(${PROJECT_NAME} opus)
+find_library(celt NAME "celt.lib"
+            PATH ${CMAKE_INSTALL_PREFIX}/lib/)
+
+
+
+
+target_link_libraries(${PROJECT_NAME} celt silk_common silk_fixed silk_float)
+
+
+  
+#message(WARNING "opus: " ${opus})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/deps/include include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR} include)
 
-
+#add_dependencies(${PROJECT_NAME} ${opus})
+# target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/deps/lib/)
 include(CTest)
-            #add_subdirectory(${PROJECT_SOURCE_DIR}/ext/opus)
-#if(BUILD_TESTING)
- #  add_subdirectory(${PROJECT_SOURCE_DIR}/ext/gtest)
-  # add_subdirectory(test)
-#endif()
+#add_subdirectory(${PROJECT_SOURCE_DIR}/ext/opus)
+if(BUILD_TESTING)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/ext/gtest)
+  add_subdirectory(test)
+endif()
 add_subdirectory(example)
 
 

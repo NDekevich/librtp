@@ -1,7 +1,9 @@
 #pragma once
 #include "codecInterface.h"
 #include "unordered_map"
-#include "../build/deps/include/opus.h"
+//#include "../build/deps/include/opus.h"
+#include <opus.h>
+#define _Debug
 #include <boost/any.hpp>
 
 //TODO Opus decoding + interface + sender Audio playback + documentation

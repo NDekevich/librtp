@@ -3,11 +3,22 @@ set(SRC_FILES
     )
 
 set(PROJECT_TEST_NAME test_rtp)
+set(DEPS_LOCATION "${CMAKE_BINARY_DIR}/deps")
+link_directories(${DEPS_LOCATION}/lib)
+include_directories(${DEPS_LOCATION}/include)
 
 add_executable(${PROJECT_TEST_NAME} ${SRC_FILES})
 target_link_libraries(${PROJECT_TEST_NAME} Ipf.proto ${Boost_LIBRARIES})
+
+link_libraries(${PROJECT_TEST_NAME} ${opus})
+target_link_libraries(${PROJECT_TEST_NAME} ${opus})
+
 target_include_directories(${PROJECT_TEST_NAME} PRIVATE ${GTEST_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(${PROJECT_NAME} PRIVATE ${DEPS_LOCATION}/include include)
 add_dependencies(${PROJECT_TEST_NAME} googletest)
+
+
+
 
 if(NOT WIN32 OR MINGW)
     target_link_libraries(${PROJECT_TEST_NAME}
